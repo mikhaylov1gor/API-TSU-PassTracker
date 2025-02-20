@@ -1,0 +1,18 @@
+# Папки сборки
+bin/
+obj/
+.vs/
+out/
+TestResults/
+
+# Конфигурационные файлы
+appsettings.Development.json
+appsettings.Local.json
+
+# Логи
+*.log
+*.tlog
+
+# Папка зависимостей
+node_modules/
+packages/

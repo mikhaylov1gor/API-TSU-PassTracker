@@ -1,0 +1,6 @@
+@API_TSU_PassTracker_HostAddress = http://localhost:5159
+
+GET {{API_TSU_PassTracker_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
