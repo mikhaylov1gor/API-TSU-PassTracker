@@ -11,9 +11,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace API_TSU_PassTracker.Migrations
 {
-    [DbContext(typeof(DBContext))]
-    [Migration("20250221142346_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(TsuPassTrackerDBContext))]
+    [Migration("20250221161333_create_DataBase")]
+    partial class create_DataBase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -28,7 +28,6 @@
     <Folder Include="Controllers\" />
     <Folder Include="Infrastructure\" />
     <Folder Include="Middleware\" />
-    <Folder Include="Models\" />
     <Folder Include="Models\DB\" />
     <Folder Include="Models\DTO\" />
     <Folder Include="Services\" />
