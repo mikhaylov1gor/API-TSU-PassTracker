@@ -4,6 +4,7 @@ using API_TSU_PassTracker.Models.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    partial class TsuPassTrackerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250223233440_addSaltInUserTable")]
+    partial class addSaltInUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,24 +78,6 @@ namespace API_TSU_PassTracker.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Request");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.TokenBlackList", b =>
-                {
-                    b.Property<Guid>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("expirationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("token")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("id");
-
-                    b.ToTable("TokenBlackList");
                 });
 
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.User", b =>

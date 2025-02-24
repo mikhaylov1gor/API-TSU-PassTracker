@@ -1,14 +1,12 @@
-using System;
+﻿using API_TSU_PassTracker.Models.DB;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using API_TSU_PassTracker.Models.DTO;
-using Microsoft.AspNetCore.Identity;
 
-namespace API_TSU_PassTracker.Models.DB
+namespace API_TSU_PassTracker.Models.DTO
 {
-    public class User
+    public class UserRegisterModel
     {
-        public Guid Id { get; set; }
-
         [Required(ErrorMessage = "Имя обязательно для заполнения.")]
         [MinLength(1, ErrorMessage = "Имя должно содержать хотя бы один символ.")]
         [MaxLength(100, ErrorMessage = "Имя не должно превышать 100 символов.")]
@@ -24,11 +22,7 @@ namespace API_TSU_PassTracker.Models.DB
             ErrorMessage = "Логин может содержать только буквы, цифры, подчеркивания и дефисы.")]
         public string Login { get; set; }
 
-        [Required(ErrorMessage = "Хэш пароля обязателен для заполнения.")]
-        public string PasswordHash { get; set; }
-
-        public string Salt {  get; set; }
-
-        public List<Request>? Requests { get; set; }
+        [Required(ErrorMessage = "пароль обязателен для заполнения."), MinLength(6, ErrorMessage = "минимальная длина пароля 6 символов")]
+        public string Password { get; set; }
     }
 }

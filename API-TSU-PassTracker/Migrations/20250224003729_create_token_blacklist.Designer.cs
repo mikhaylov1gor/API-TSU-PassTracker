@@ -4,6 +4,7 @@ using API_TSU_PassTracker.Models.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    partial class TsuPassTrackerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250224003729_create_token_blacklist")]
+    partial class create_token_blacklist
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
