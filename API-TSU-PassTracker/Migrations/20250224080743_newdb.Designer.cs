@@ -11,9 +11,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace API_TSU_PassTracker.Migrations
 {
-    [DbContext(typeof(DBContext))]
-    [Migration("20250221142346_InitialCreate")]
-    partial class InitialCreate
+    [DbContext(typeof(TsuPassTrackerDBContext))]
+    [Migration("20250224080743_newdb")]
+    partial class newdb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -80,6 +80,24 @@ namespace API_TSU_PassTracker.Migrations
                     b.ToTable("Request");
                 });
 
+            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.TokenBlackList", b =>
+                {
+                    b.Property<Guid>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("expirationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("id");
+
+                    b.ToTable("TokenBlackList");
+                });
+
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -102,6 +120,10 @@ namespace API_TSU_PassTracker.Migrations
 
                     b.Property<int>("Roles")
                         .HasColumnType("int");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

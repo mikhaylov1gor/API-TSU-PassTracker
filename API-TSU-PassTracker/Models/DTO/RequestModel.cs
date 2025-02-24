@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using API_TSU_PassTracker.Models.DB;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
-namespace API_TSU_PassTracker.Models.DB
+namespace API_TSU_PassTracker.Models.DTO
 {
-    public class Request
-
+    public class RequestModel
     {
         public Guid Id { get; set; }
 
