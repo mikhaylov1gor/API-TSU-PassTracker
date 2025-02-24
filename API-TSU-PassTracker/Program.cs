@@ -53,7 +53,8 @@ builder.Services.AddSwaggerGen(c =>
 
 //database
 var connection = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<TsuPassTrackerDBContext>(options => options.UseSqlServer(connection));
+builder.Services.AddDbContext<TsuPassTrackerDBContext>(options => 
+    options.UseNpgsql(connection));
 
 // services
 builder.Services.AddScoped<IAdminService, AdminService>();
