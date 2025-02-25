@@ -30,7 +30,7 @@ namespace API_TSU_PassTracker.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Roles = table.Column<int>(type: "integer", nullable: false),
+                    Roles = table.Column<int[]>(type: "integer[]", nullable: false),
                     Login = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
                     Salt = table.Column<string>(type: "text", nullable: false)

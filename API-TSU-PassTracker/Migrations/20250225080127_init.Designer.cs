@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    [Migration("20250224164922_init")]
+    [Migration("20250225080127_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -118,8 +118,9 @@ namespace API_TSU_PassTracker.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Roles")
-                        .HasColumnType("integer");
+                    b.PrimitiveCollection<int[]>("Roles")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
 
                     b.Property<string>("Salt")
                         .IsRequired()

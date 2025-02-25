@@ -10,51 +10,33 @@ namespace API_TSU_PassTracker.Services
 {
     public interface IAdminService
     {
-        Task<TokenResponseModel> register(UserRegisterModel user);
+        Task<bool> ChangeUserRole(UserRoleUpdateModel model);
     }
     public class AdminService : IAdminService
     {
         private readonly TsuPassTrackerDBContext _context;
-        private readonly IPasswordHasher _passwordHasher;
-        private readonly IJwtProvider _jwtProvider;
+        
 
         public AdminService(
-            TsuPassTrackerDBContext context,
-            IPasswordHasher passwordHasher,
-            IJwtProvider jwtProvider)
+            TsuPassTrackerDBContext context)
         {
             _context = context;
-            _passwordHasher = passwordHasher;
-            _jwtProvider = jwtProvider;
         }
 
-        public async Task<TokenResponseModel> register(UserRegisterModel user)
+        public async Task<bool> ChangeUserRole(UserRoleUpdateModel userRoleUpdateModel)
         {
-            var isExists = await _context.User
-                .AsNoTracking()
-                .AnyAsync(u => u.Login == user.Login);
+            var user = await _context.User
+                .FirstOrDefaultAsync(u => u.Id == userRoleUpdateModel.Id);
 
-            var salt = _passwordHasher.GenerateSalt();
-            var hashedPassword = _passwordHasher.GenerateHashPassword(user.Password, salt);
-
-            if (isExists)
+            if (user == null)
             {
-                throw new ArgumentException("Пользователь уже существует.");
+                throw new ArgumentException("Пользователь не найден");
             }
 
-            User newUser = new User
-            {
-                Name = user.Name,
-                Roles = user.Roles,
-                Login = user.Login,
-                PasswordHash = hashedPassword,
-                Salt = salt,
-            };
-
-            await _context.User.AddAsync(newUser);
+            user.Roles = userRoleUpdateModel.Roles;
+            
             await _context.SaveChangesAsync();
-
-            return _jwtProvider.GenerateToken(newUser);
+            return true;
         }
     }
 }

@@ -1,7 +1,10 @@
-﻿using API_TSU_PassTracker.Models.DTO;
+﻿using API_TSU_PassTracker.Filters;
+using API_TSU_PassTracker.Models.DTO;
 using API_TSU_PassTracker.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 
 namespace API_TSU_PassTracker.Controllers
 {
@@ -16,22 +19,22 @@ namespace API_TSU_PassTracker.Controllers
             _adminService = _service;
         }
 
-        [HttpPost]
-        public async Task<ActionResult> register(UserRegisterModel newUser)
+        [HttpPut("role")]
+        [Authorize(Roles = "Dean")]
+        public async Task<ActionResult> ChangeUserRole([FromBody] UserRoleUpdateModel userRoleUpdateModel)
         {
-            try
-            {
-                var response = await _adminService.register(newUser);
-                return Ok(response);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message }); // 400
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Произошла ошибка на сервере." }); // 500
-            }
+            if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .FirstOrDefault();
+                    return StatusCode(StatusCodes.Status400BadRequest, 
+                        new ErrorResponse(400, "Ошибка валидации", errors));
+                }
+
+                var result = await _adminService.ChangeUserRole(userRoleUpdateModel);
+                return Ok(new { message = "Роль пользователя успешно обновлена" });
+            
         }
     }
 }

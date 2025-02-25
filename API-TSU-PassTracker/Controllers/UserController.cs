@@ -18,54 +18,37 @@ namespace API_TSU_PassTracker.Controllers
         }
 
         [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<ActionResult> register(UserRegisterModel newUser)
+        {
+            await _userService.register(newUser);
+            return Ok(new { message = "Пользователь зарегестрирован успешно." });
+        }
+
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginCredentialsModel loginCredentials)
         {
-            try
-            {
-                var token = await _userService.login(loginCredentials);
-                return Ok(token);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message }); // 400
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message }); // 401
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Произошла ошибка на сервере." }); // 500
-            }
+            var token = await _userService.login(loginCredentials);
+            return Ok(token);
         }
 
         [HttpPost("logout")]
+        [Authorize]
         public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string token)
         {
-            try
-            {
-                token = token?.Replace("Bearer ", string.Empty);
+            token = token?.Replace("Bearer ", string.Empty);
                 if (string.IsNullOrEmpty(token))
                 {
-                    return BadRequest(new { message = "Токен не предоставлен или пуст." });
+                    var errors = ModelState.Values.SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .FirstOrDefault();
+                    return StatusCode(StatusCodes.Status400BadRequest, 
+                        new ErrorResponse(400, "Ошибка валидации", errors));
                 }
 
                 await _userService.logout(token, User);
                 return Ok(new { message = "Выход выполнен успешно." });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message }); // 401
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message }); // 400
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Произошла ошибка при выходе из системы." }); // 500
-            }
         }
     }
 }

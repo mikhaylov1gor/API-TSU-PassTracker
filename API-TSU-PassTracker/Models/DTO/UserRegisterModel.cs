@@ -12,9 +12,6 @@ namespace API_TSU_PassTracker.Models.DTO
         [MaxLength(100, ErrorMessage = "Имя не должно превышать 100 символов.")]
         public string Name { get; set; }
 
-        [Required(ErrorMessage = "Роль обязательна для заполнения.")]
-        public Role Roles { get; set; }
-
         [Required(ErrorMessage = "Логин обязателен для заполнения.")]
         [MinLength(1, ErrorMessage = "Логин должен содержать хотя бы один символ.")]
         [MaxLength(50, ErrorMessage = "Логин не должен превышать 50 символов.")]

@@ -29,6 +29,14 @@ namespace API_TSU_PassTracker.Infrastructure
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             };
 
+            if (user.Roles != null)
+            {
+                foreach (var role in user.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
+                }
+            }
+
             var signingCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey)),
                 SecurityAlgorithms.HmacSha256);

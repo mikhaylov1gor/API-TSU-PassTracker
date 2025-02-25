@@ -115,8 +115,9 @@ namespace API_TSU_PassTracker.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Roles")
-                        .HasColumnType("integer");
+                    b.PrimitiveCollection<int[]>("Roles")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
 
                     b.Property<string>("Salt")
                         .IsRequired()

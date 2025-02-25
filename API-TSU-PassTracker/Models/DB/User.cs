@@ -15,7 +15,7 @@ namespace API_TSU_PassTracker.Models.DB
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Роль обязательна для заполнения.")]
-        public Role Roles { get; set; }
+        public List<Role>? Roles { get; set; }
 
         [Required(ErrorMessage = "Логин обязателен для заполнения.")]
         [MinLength(1, ErrorMessage = "Логин должен содержать хотя бы один символ.")]
