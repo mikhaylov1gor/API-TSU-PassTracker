@@ -5,25 +5,18 @@
 namespace API_TSU_PassTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class addSaltInUserTable : Migration
+    public partial class requestUpdate2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Salt",
-                table: "User",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Salt",
-                table: "User");
+
         }
     }
 }

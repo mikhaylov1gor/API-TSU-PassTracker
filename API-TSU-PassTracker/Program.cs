@@ -67,6 +67,7 @@ builder.Services.AddDbContext<TsuPassTrackerDBContext>(options =>
 // services
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<ITokenBlackListService, TokenBlackListService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
