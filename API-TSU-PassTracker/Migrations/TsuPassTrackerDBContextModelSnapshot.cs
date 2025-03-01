@@ -67,6 +67,9 @@ namespace API_TSU_PassTracker.Migrations
                     b.Property<DateTime>("DateTo")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
