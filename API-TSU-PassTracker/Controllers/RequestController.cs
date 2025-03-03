@@ -19,11 +19,12 @@ public class RequestController : ControllerBase
 
     [HttpPost("create")]
     [Authorize(Roles = "Student")]
-    public async Task<IActionResult> CreateRequest([FromBody] RequestModel request)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> CreateRequest([FromForm] RequestModel request)
     {
         var user = HttpContext.User;
-        await _requestService.CreateRequest(request, user);
-        return Ok(new { message = "Заявка создана успешно." });
+        var requestId = await _requestService.CreateRequest(request, user);
+        return Ok(new { id = requestId });
     }
 
     [HttpGet("all")]
