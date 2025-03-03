@@ -12,6 +12,8 @@ namespace API_TSU_PassTracker.Models.DB
 
         public DbSet<Confirmation> Confirmation { get; set; }
 
+        public DbSet<ConfirmationFile> ConfirmationFile { get; set; }
+
         
         public DbSet<TokenBlackList> TokenBlackList { get; set; }
 

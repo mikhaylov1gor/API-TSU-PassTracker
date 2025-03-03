@@ -12,6 +12,8 @@ using System.Text.Json.Serialization;
 using API_TSU_PassTracker.Filters;
 using API_TSU_PassTracker.Models.DTO;
 using API_TSU_PassTracker.Middleware;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using API_TSU_PassTracker.Filter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,7 +59,9 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+    c.SchemaFilter<FormFileSchemaFilter>();
 });
+
 
 //database
 var connection = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -67,6 +71,7 @@ builder.Services.AddDbContext<TsuPassTrackerDBContext>(options =>
 // services
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IConfirmationService, ConfirmationService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<ITokenBlackListService, TokenBlackListService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();

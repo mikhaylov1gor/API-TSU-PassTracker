@@ -15,7 +15,7 @@ namespace API_TSU_PassTracker.Services
         Task register(UserRegisterModel userRegisterModel);
         Task<TokenResponseModel> login(LoginCredentialsModel loginCredentials);
         Task logout(string token, ClaimsPrincipal user);
-        Task<IEnumerable<RequestDTO>> GetAllMyRequests(ClaimsPrincipal user);
+        Task<IEnumerable<LightRequestDTO>> GetAllMyRequests(ClaimsPrincipal user);
     }
     public class UserService : IUserService
     {
@@ -105,25 +105,29 @@ namespace API_TSU_PassTracker.Services
             await _tokenBlackListService.AddTokenToBlackList(token);
         }
 
-        public async Task<IEnumerable<RequestDTO>> GetAllMyRequests(ClaimsPrincipal user)
+        public async Task<IEnumerable<LightRequestDTO>> GetAllMyRequests(ClaimsPrincipal user)
         {
             var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
 
             var requests = await _context.Request
            .Where(r => r.UserId == userId)
            .Include(r => r.User)
-           .Include(r => r.Confirmations)
+           .Include(r => r.Confirmation)
+            .ThenInclude(c => c != null ? c.Files : null)
+           
            .ToListAsync();
 
-            var requestDtos = requests.Select(r => new RequestDTO
+            var requestDtos = requests.Select(r => new LightRequestDTO
             {
                 Id = r.Id,
+                CreatedDate = r.CreatedDate,
                 DateFrom = r.DateFrom,
                 DateTo = r.DateTo,
-                UserId = r.UserId,
                 UserName = r.User.Name,
                 Status = r.Status,
-
+                ConfirmationType = r.Confirmation != null 
+                ? r.Confirmation.ConfirmationType
+                : null
             });
 
             return requestDtos;
