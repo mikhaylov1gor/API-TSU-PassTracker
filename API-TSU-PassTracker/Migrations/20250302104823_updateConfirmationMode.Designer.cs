@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    [Migration("20250301135759_init")]
-    partial class init
+    [Migration("20250302104823_updateConfirmationMode")]
+    partial class updateConfirmationMode
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

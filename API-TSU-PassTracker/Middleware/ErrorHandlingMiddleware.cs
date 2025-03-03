@@ -28,7 +28,7 @@ namespace API_TSU_PassTracker.Middleware
                 }
                 catch (Exception ex)
                 {
-                    await HandleExceptionAsync(context, ex);
+                    await HandleExceptionAsync(context, ex);  
                 }
             }
 

@@ -5,7 +5,7 @@
 namespace API_TSU_PassTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class requestUpdate : Migration
+    public partial class postgresqlcontainer_migration_534 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

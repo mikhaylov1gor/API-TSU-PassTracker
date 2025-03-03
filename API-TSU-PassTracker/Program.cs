@@ -98,7 +98,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 context.Response.ContentType = "application/json";
                 var error = new ErrorResponse(
                     status: 401,
-                    message: "Ошибка аутентификации",
+                    message: "Ошибка авторизации",
                     details: builder.Environment.IsDevelopment() ? context.Exception.Message : null
                 );
                 await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));
@@ -110,7 +110,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 context.Response.ContentType = "application/json";
                 var error = new ErrorResponse(
                     status: 401,
-                    message: "Требуется аутентификация",
+                    message: "Требуется авторизация",
                     details: null
                 );
                 await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    [Migration("20250301145256_requestUpdate")]
-    partial class requestUpdate
+    [Migration("20250302094519_postgresql.container_migration_534")]
+    partial class postgresqlcontainer_migration_534
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>API_TSU_PassTracker</RootNamespace>
+    <UserSecretsId>3cf2b423-0025-42b8-a06d-986b6451726e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +22,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 

@@ -50,5 +50,14 @@ namespace API_TSU_PassTracker.Controllers
                 await _userService.logout(token, User);
                 return Ok(new { message = "Выход выполнен успешно." });
         }
+
+        [HttpGet("requests")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> GetAllMyRequests()
+        {
+            var user = HttpContext.User;
+            var requests = await _userService.GetAllMyRequests(user);
+            return Ok(requests);
+        }
     }
 }

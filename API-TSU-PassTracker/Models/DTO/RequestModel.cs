@@ -8,6 +8,7 @@ namespace API_TSU_PassTracker.Models.DTO
     {
         public DateTime DateFrom { get; set; }
         public DateTime DateTo { get; set; }
+        public List<IFormFile>? Confirmations { get; set; }
     }
 
 }

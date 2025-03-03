@@ -5,7 +5,7 @@
 namespace API_TSU_PassTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class requestUpdate2 : Migration
+    public partial class updateConfirmationMode : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -35,15 +35,6 @@ public class RequestController : ControllerBase
         return Ok(requests);
     }
 
-    [HttpGet("my")]
-    [Authorize(Roles = "Student")]
-    public async Task<IActionResult> GetAllMyRequests()
-    {
-        var user = HttpContext.User;
-        var requests = await _requestService.GetAllMyRequests(user);
-        return Ok(requests);
-    }
-
     [HttpGet("{id}")]
     [Authorize(Roles = "Student, Dean")]
     public async Task<IActionResult> GetRequestById(Guid id)

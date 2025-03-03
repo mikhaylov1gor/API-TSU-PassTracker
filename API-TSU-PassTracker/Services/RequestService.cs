@@ -10,7 +10,6 @@ public interface IRequestService
 {
     Task CreateRequest(RequestModel request, ClaimsPrincipal user);
     Task<IEnumerable<RequestDTO>> GetAllRequests(ClaimsPrincipal user);
-    Task<IEnumerable<RequestDTO>> GetAllMyRequests(ClaimsPrincipal user);
     Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user);
 
     Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user);
@@ -33,8 +32,24 @@ public class RequestService : IRequestService
             Id = Guid.NewGuid(),
             UserId = userId,
             DateFrom = request.DateFrom,
-            DateTo = request.DateTo
+            DateTo = request.DateTo,
+            Confirmations = new List<Confirmation>() 
         };
+
+        if (request.Confirmations != null && request.Confirmations.Count > 0)
+        {
+            foreach (var file in request.Confirmations)
+            {
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                dbRequest.Confirmations.Add(new Confirmation
+                {
+                    Id = Guid.NewGuid(),
+                    FileName = file.FileName,
+                    FileData = ms.ToArray()
+                });
+            }
+        }
 
         _context.Request.Add(dbRequest);
         await _context.SaveChangesAsync();
@@ -47,30 +62,6 @@ public class RequestService : IRequestService
             .Include(r => r.User) 
             .Include(r => r.Confirmations)
             .ToListAsync();
-
-        var requestDtos = requests.Select(r => new RequestDTO
-        {
-            Id = r.Id,
-            DateFrom = r.DateFrom,
-            DateTo = r.DateTo,
-            UserId = r.UserId,
-            UserName = r.User.Name,
-            Status = r.Status,
-
-        });
-
-        return requestDtos;
-    }
-
-    public async Task<IEnumerable<RequestDTO>> GetAllMyRequests(ClaimsPrincipal user)
-    {
-        var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-         var requests = await _context.Request
-        .Where(r => r.UserId == userId)
-        .Include(r => r.User) 
-        .Include(r => r.Confirmations)
-        .ToListAsync();
 
         var requestDtos = requests.Select(r => new RequestDTO
         {

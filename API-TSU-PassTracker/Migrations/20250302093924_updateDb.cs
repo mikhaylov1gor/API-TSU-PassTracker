@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace API_TSU_PassTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class updateDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
