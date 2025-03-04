@@ -112,9 +112,7 @@ namespace API_TSU_PassTracker.Services
             var requests = await _context.Request
            .Where(r => r.UserId == userId)
            .Include(r => r.User)
-           .Include(r => r.Confirmation)
-            .ThenInclude(c => c != null ? c.Files : null)
-           
+           .Include(r => r.Files)
            .ToListAsync();
 
             var requestDtos = requests.Select(r => new LightRequestDTO
@@ -125,9 +123,7 @@ namespace API_TSU_PassTracker.Services
                 DateTo = r.DateTo,
                 UserName = r.User.Name,
                 Status = r.Status,
-                ConfirmationType = r.Confirmation != null 
-                ? r.Confirmation.ConfirmationType
-                : null
+                ConfirmationType = r.ConfirmationType
             });
 
             return requestDtos;

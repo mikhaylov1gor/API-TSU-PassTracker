@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
-using API_TSU_PassTracker.Models.DTO;
+using System.Threading.Tasks;
 using API_TSU_PassTracker.Models.DB;
+using API_TSU_PassTracker.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 
 namespace API_TSU_PassTracker.Services;
@@ -26,28 +29,32 @@ public class RequestService : IRequestService
     public async Task<Guid> CreateRequest(RequestModel request, ClaimsPrincipal user)
     {
         var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
-        
-        if (request.DateTo <= request.DateFrom)
-        {
-            throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
-        }
+        ValidateDatesAndFiles(request);
 
         var dbRequest = new Request
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            DateFrom = request.DateFrom.Kind == DateTimeKind.Unspecified 
-                ? DateTime.SpecifyKind(request.DateFrom, DateTimeKind.Utc) 
-                : request.DateFrom.ToUniversalTime(),
-            DateTo = request.DateTo.Kind == DateTimeKind.Unspecified 
-                ? DateTime.SpecifyKind(request.DateTo, DateTimeKind.Utc) 
-                : request.DateTo.ToUniversalTime(),
-            CreatedDate = DateTime.UtcNow
+            DateFrom = EnsureUtc(request.DateFrom),
+            DateTo = request.DateTo.HasValue ? EnsureUtc(request.DateTo.Value) : 
+                     request.ConfirmationType == ConfirmationType.Medical ? EnsureUtc(request.DateFrom.AddDays(7)) : null,
+            CreatedDate = DateTime.UtcNow,
+            ConfirmationType = request.ConfirmationType
         };
+
+        if (request.Files != null && request.Files.Count > 0)
+        {
+            dbRequest.Files = new byte[request.Files.Count][];
+            for (int i = 0; i < request.Files.Count; i++)
+            {
+                using var ms = new MemoryStream();
+                await request.Files[i].CopyToAsync(ms);
+                dbRequest.Files[i] = ms.ToArray();
+            }
+        }
 
         _context.Request.Add(dbRequest);
         await _context.SaveChangesAsync();
-
         return dbRequest.Id;
     }
 
@@ -55,11 +62,9 @@ public class RequestService : IRequestService
     {
         var requests = await _context.Request
             .Include(r => r.User)
-            .Include(r => r.Confirmation)
-            .ThenInclude(c => c.Files)
             .ToListAsync();
 
-        var requestDtos = requests.Select(r => new LightRequestDTO
+        return requests.Select(r => new LightRequestDTO
         {
             Id = r.Id,
             CreatedDate = r.CreatedDate,
@@ -67,37 +72,8 @@ public class RequestService : IRequestService
             DateTo = r.DateTo,
             UserName = r.User.Name,
             Status = r.Status,
-            ConfirmationType = r.Confirmation != null
-            ? r.Confirmation.ConfirmationType
-            : null,
+            ConfirmationType = r.ConfirmationType
         });
-
-        return requestDtos;
-    }
-
-    public async Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user)
-    {
-        var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        var existingRequest = await _context.Request
-            .FirstOrDefaultAsync(r => r.Id == id);
-
-        if (existingRequest == null)
-        {
-            throw new KeyNotFoundException("Запрос не найден.");
-        }
-
-        if (existingRequest.UserId != userId)
-        {
-            throw new UnauthorizedAccessException("Вы не можете изменить этот запрос.");
-        }
-
-        existingRequest.DateTo = request.DateTo.Kind == DateTimeKind.Unspecified 
-            ? DateTime.SpecifyKind(request.DateTo, DateTimeKind.Utc) 
-            : request.DateTo.ToUniversalTime();
-
-        _context.Request.Update(existingRequest);
-        await _context.SaveChangesAsync();
     }
 
     public async Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user)
@@ -107,21 +83,15 @@ public class RequestService : IRequestService
 
         var request = await _context.Request
             .Include(r => r.User)
-            .Include(r => r.Confirmation)
-            .ThenInclude(c => c.Files)
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (request == null)
-        {
             throw new KeyNotFoundException("Запрос не найден.");
-        }
 
         if (!isDean && request.UserId != userId)
-        {
             throw new UnauthorizedAccessException("Вы не можете просматривать этот запрос.");
-        }
 
-        var requestDto = new RequestDTO
+        return new RequestDTO
         {
             Id = request.Id,
             CreatedDate = request.CreatedDate,
@@ -130,21 +100,99 @@ public class RequestService : IRequestService
             Status = request.Status,
             UserId = request.UserId,
             UserName = request.User.Name,
-            Confirmation = request.Confirmation != null 
-                ? new ConfirmationDTO
-                    {
-                        Id = request.Confirmation.Id,
-                        ConfirmationType = request.Confirmation.ConfirmationType,
-                        Files = request.Confirmation.Files.Select(f => new ConfirmationFileDTO
-                        {
-                            Id = f.Id,
-                            FileName = f.FileName,
-                            FileBase64 = Convert.ToBase64String(f.FileData)
-                        }).ToList()
-                    }
-                : null
+            ConfirmationType = request.ConfirmationType,
+            Files = request.Files?.Select(f => Convert.ToBase64String(f)).ToList() ?? new List<string>()
         };
+    }
 
-        return requestDto;
+    public async Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user)
+    {
+        var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
+        var isDean = user.IsInRole("Dean");
+
+        var existingRequest = await _context.Request
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (existingRequest == null)
+            throw new KeyNotFoundException("Запрос не найден.");
+
+        if (!isDean && existingRequest.UserId != userId)
+            throw new UnauthorizedAccessException("Вы не можете изменить этот запрос.");
+
+        if (!isDean && existingRequest.ConfirmationType == ConfirmationType.Educational && 
+            (request.DateFrom.HasValue || request.DateTo.HasValue))
+            throw new UnauthorizedAccessException("Студент не может изменять даты учебной заявки.");
+
+        if (request.DateFrom.HasValue)
+            existingRequest.DateFrom = EnsureUtc(request.DateFrom.Value);
+
+        if (request.DateTo.HasValue)
+        {
+            if (request.DateTo.Value <= existingRequest.DateFrom)
+                throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
+            existingRequest.DateTo = EnsureUtc(request.DateTo.Value);
+        }
+        else if (existingRequest.ConfirmationType == ConfirmationType.Medical && existingRequest.DateTo == null)
+        {
+            existingRequest.DateTo = EnsureUtc(existingRequest.DateFrom.AddDays(7));
+        }
+
+        if (request.Files != null) 
+        {
+            if (request.Files.Count > 0)
+            {
+                existingRequest.Files = new byte[request.Files.Count][];
+                for (int i = 0; i < request.Files.Count; i++)
+                {
+                    using var ms = new MemoryStream();
+                    await request.Files[i].CopyToAsync(ms);
+                    existingRequest.Files[i] = ms.ToArray();
+                }
+            }
+            else
+            {
+                existingRequest.Files = Array.Empty<byte[]>();
+            }
+        }
+
+        ValidateDatesAndFiles(new RequestModel
+        {
+            DateFrom = existingRequest.DateFrom,
+            DateTo = existingRequest.DateTo,
+            ConfirmationType = existingRequest.ConfirmationType,
+            Files = request.Files ?? (existingRequest.Files?.Length > 0 ? new List<IFormFile>() : null)
+        });
+
+        await _context.SaveChangesAsync();
+    }
+
+    private DateTime EnsureUtc(DateTime date) =>
+        date.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(date, DateTimeKind.Utc) : date.ToUniversalTime();
+
+    private void ValidateDatesAndFiles(RequestModel request)
+    {
+        switch (request.ConfirmationType)
+        {
+            case ConfirmationType.Medical:
+                if (request.Files == null || request.Files.Count == 0)
+                    throw new ArgumentException("Для больничного требуется минимум один файл.");
+                break;
+            case ConfirmationType.Educational:
+                if (!request.DateTo.HasValue)
+                    throw new ArgumentException("Для учебной заявки DateTo обязательна.");
+                if (request.DateTo.Value <= request.DateFrom)
+                    throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
+                if (request.Files == null || request.Files.Count == 0)
+                    throw new ArgumentException("Для учебной заявки требуется минимум один файл.");
+                break;
+            case ConfirmationType.Family:
+                if (!request.DateTo.HasValue)
+                    throw new ArgumentException("Для семейной заявки DateTo обязательна.");
+                if (request.DateTo.Value <= request.DateFrom)
+                    throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
+                break;
+            default:
+                throw new ArgumentException("Неизвестный тип подтверждения.");
+        }
     }
 }

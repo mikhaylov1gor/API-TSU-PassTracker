@@ -22,7 +22,7 @@ namespace API_TSU_PassTracker.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Confirmation", b =>
+            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,55 +31,18 @@ namespace API_TSU_PassTracker.Migrations
                     b.Property<int>("ConfirmationType")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("RequestId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequestId")
-                        .IsUnique();
-
-                    b.ToTable("Confirmation");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.ConfirmationFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ConfirmationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<byte[]>("FileData")
-                        .IsRequired()
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConfirmationId");
-
-                    b.ToTable("ConfirmationFile");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("DateFrom")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DateTo")
+                    b.Property<DateTime?>("DateTo")
                         .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<byte[][]>("Files")
+                        .IsRequired()
+                        .HasColumnType("bytea[]");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -145,26 +108,6 @@ namespace API_TSU_PassTracker.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Confirmation", b =>
-                {
-                    b.HasOne("API_TSU_PassTracker.Models.DB.Request", null)
-                        .WithOne("Confirmation")
-                        .HasForeignKey("API_TSU_PassTracker.Models.DB.Confirmation", "RequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.ConfirmationFile", b =>
-                {
-                    b.HasOne("API_TSU_PassTracker.Models.DB.Confirmation", "Confirmation")
-                        .WithMany("Files")
-                        .HasForeignKey("ConfirmationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Confirmation");
-                });
-
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
                 {
                     b.HasOne("API_TSU_PassTracker.Models.DB.User", "User")
@@ -174,16 +117,6 @@ namespace API_TSU_PassTracker.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Confirmation", b =>
-                {
-                    b.Navigation("Files");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
-                {
-                    b.Navigation("Confirmation");
                 });
 
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.User", b =>

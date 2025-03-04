@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    [Migration("20250302093924_updateDb")]
-    partial class updateDb
+    [Migration("20250304105335_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,50 +25,27 @@ namespace API_TSU_PassTracker.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Confirmation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<byte[]>("FileContent")
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FileName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<long?>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("FileType")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<Guid>("RequestId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequestId");
-
-                    b.ToTable("Confirmation");
-                });
-
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("ConfirmationType")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("DateFrom")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DateTo")
+                    b.Property<DateTime?>("DateTo")
                         .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<byte[][]>("Files")
+                        .IsRequired()
+                        .HasColumnType("bytea[]");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -134,17 +111,6 @@ namespace API_TSU_PassTracker.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Confirmation", b =>
-                {
-                    b.HasOne("API_TSU_PassTracker.Models.DB.Request", "Request")
-                        .WithMany("Confirmations")
-                        .HasForeignKey("RequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Request");
-                });
-
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
                 {
                     b.HasOne("API_TSU_PassTracker.Models.DB.User", "User")
@@ -154,11 +120,6 @@ namespace API_TSU_PassTracker.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
-                {
-                    b.Navigation("Confirmations");
                 });
 
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.User", b =>

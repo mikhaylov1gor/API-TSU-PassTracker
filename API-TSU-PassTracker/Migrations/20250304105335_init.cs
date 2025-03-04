@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace API_TSU_PassTracker.Migrations
 {
     /// <inheritdoc />
-    public partial class updateDb : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,10 +45,13 @@ namespace API_TSU_PassTracker.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false)
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    ConfirmationType = table.Column<int>(type: "integer", nullable: false),
+                    Files = table.Column<byte[][]>(type: "bytea[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -61,34 +64,6 @@ namespace API_TSU_PassTracker.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "Confirmation",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    FileType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    FileContent = table.Column<byte[]>(type: "bytea", nullable: true),
-                    FileSize = table.Column<long>(type: "bigint", nullable: true),
-                    UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RequestId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Confirmation", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Confirmation_Request_RequestId",
-                        column: x => x.RequestId,
-                        principalTable: "Request",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Confirmation_RequestId",
-                table: "Confirmation",
-                column: "RequestId");
-
             migrationBuilder.CreateIndex(
                 name: "IX_Request_UserId",
                 table: "Request",
@@ -99,13 +74,10 @@ namespace API_TSU_PassTracker.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Confirmation");
+                name: "Request");
 
             migrationBuilder.DropTable(
                 name: "TokenBlackList");
-
-            migrationBuilder.DropTable(
-                name: "Request");
 
             migrationBuilder.DropTable(
                 name: "User");
