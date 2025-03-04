@@ -11,6 +11,8 @@ namespace API_TSU_PassTracker.Services
     public interface IAdminService
     {
         Task<bool> ChangeUserRole(UserRoleUpdateModel model);
+        Task<bool> confirmAccount(Guid userId, bool status);
+        Task<bool> confirmRequest(Guid requestId, RequestStatus status);
     }
     public class AdminService : IAdminService
     {
@@ -35,6 +37,36 @@ namespace API_TSU_PassTracker.Services
 
             user.Roles = userRoleUpdateModel.Roles;
             
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> confirmAccount(Guid userId, bool status)
+        {
+            var user = await _context.User
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return false; 
+            }
+
+            user.IsConfirmed = status;
+            await _context.SaveChangesAsync();
+            return true; 
+        }
+
+        public async Task<bool> confirmRequest(Guid requestId, RequestStatus status)
+        {
+            var request = await _context.Request
+                .FirstOrDefaultAsync(r => r.Id == requestId);
+
+            if (request == null)
+            {
+                return false;
+            }
+
+            request.Status = status;
             await _context.SaveChangesAsync();
             return true;
         }
