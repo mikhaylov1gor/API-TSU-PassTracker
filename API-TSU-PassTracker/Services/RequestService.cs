@@ -29,41 +29,32 @@ public class RequestService : IRequestService
     public async Task<Guid> CreateRequest(RequestModel request, ClaimsPrincipal user)
     {
         var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
-
-        if (request.DateTo <= request.DateFrom)
-            throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
-
-        ValidateConfirmation(request.ConfirmationType, request.Files);
+        ValidateDatesAndFiles(request);
 
         var dbRequest = new Request
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             DateFrom = EnsureUtc(request.DateFrom),
-            DateTo = EnsureUtc(request.DateTo),
+            DateTo = request.DateTo.HasValue ? EnsureUtc(request.DateTo.Value) : 
+                     request.ConfirmationType == ConfirmationType.Medical ? EnsureUtc(request.DateFrom.AddDays(7)) : null,
             CreatedDate = DateTime.UtcNow,
-            ConfirmationType = request.ConfirmationType,
-            Files = new List<RequestFile>()
+            ConfirmationType = request.ConfirmationType
         };
 
         if (request.Files != null && request.Files.Count > 0)
         {
-            foreach (var file in request.Files)
+            dbRequest.Files = new byte[request.Files.Count][];
+            for (int i = 0; i < request.Files.Count; i++)
             {
                 using var ms = new MemoryStream();
-                await file.CopyToAsync(ms);
-                dbRequest.Files.Add(new RequestFile
-                {
-                    Id = Guid.NewGuid(),
-                    FileName = file.FileName,
-                    FileData = ms.ToArray()
-                });
+                await request.Files[i].CopyToAsync(ms);
+                dbRequest.Files[i] = ms.ToArray();
             }
         }
 
         _context.Request.Add(dbRequest);
         await _context.SaveChangesAsync();
-
         return dbRequest.Id;
     }
 
@@ -71,10 +62,9 @@ public class RequestService : IRequestService
     {
         var requests = await _context.Request
             .Include(r => r.User)
-            .Include(r => r.Files)
             .ToListAsync();
 
-        var requestDtos = requests.Select(r => new LightRequestDTO
+        return requests.Select(r => new LightRequestDTO
         {
             Id = r.Id,
             CreatedDate = r.CreatedDate,
@@ -84,8 +74,6 @@ public class RequestService : IRequestService
             Status = r.Status,
             ConfirmationType = r.ConfirmationType
         });
-
-        return requestDtos;
     }
 
     public async Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user)
@@ -95,7 +83,6 @@ public class RequestService : IRequestService
 
         var request = await _context.Request
             .Include(r => r.User)
-            .Include(r => r.Files)
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (request == null)
@@ -114,18 +101,14 @@ public class RequestService : IRequestService
             UserId = request.UserId,
             UserName = request.User.Name,
             ConfirmationType = request.ConfirmationType,
-            Files = request.Files.Select(f => new RequestFileDTO
-            {
-                Id = f.Id,
-                FileName = f.FileName,
-                FileBase64 = Convert.ToBase64String(f.FileData)
-            }).ToList()
+            Files = request.Files?.Select(f => Convert.ToBase64String(f)).ToList() ?? new List<string>()
         };
     }
 
     public async Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user)
     {
         var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
+        var isDean = user.IsInRole("Dean");
 
         var existingRequest = await _context.Request
             .FirstOrDefaultAsync(r => r.Id == id);
@@ -133,30 +116,80 @@ public class RequestService : IRequestService
         if (existingRequest == null)
             throw new KeyNotFoundException("Запрос не найден.");
 
-        if (existingRequest.UserId != userId)
+        if (!isDean && existingRequest.UserId != userId)
             throw new UnauthorizedAccessException("Вы не можете изменить этот запрос.");
 
-        existingRequest.DateTo = EnsureUtc(request.DateTo);
+        if (!isDean && existingRequest.ConfirmationType == ConfirmationType.Educational && 
+            (request.DateFrom.HasValue || request.DateTo.HasValue))
+            throw new UnauthorizedAccessException("Студент не может изменять даты учебной заявки.");
 
-        _context.Request.Update(existingRequest);
+        if (request.DateFrom.HasValue)
+            existingRequest.DateFrom = EnsureUtc(request.DateFrom.Value);
+
+        if (request.DateTo.HasValue)
+        {
+            if (request.DateTo.Value <= existingRequest.DateFrom)
+                throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
+            existingRequest.DateTo = EnsureUtc(request.DateTo.Value);
+        }
+        else if (existingRequest.ConfirmationType == ConfirmationType.Medical && existingRequest.DateTo == null)
+        {
+            existingRequest.DateTo = EnsureUtc(existingRequest.DateFrom.AddDays(7));
+        }
+
+        if (request.Files != null) 
+        {
+            if (request.Files.Count > 0)
+            {
+                existingRequest.Files = new byte[request.Files.Count][];
+                for (int i = 0; i < request.Files.Count; i++)
+                {
+                    using var ms = new MemoryStream();
+                    await request.Files[i].CopyToAsync(ms);
+                    existingRequest.Files[i] = ms.ToArray();
+                }
+            }
+            else
+            {
+                existingRequest.Files = Array.Empty<byte[]>();
+            }
+        }
+
+        ValidateDatesAndFiles(new RequestModel
+        {
+            DateFrom = existingRequest.DateFrom,
+            DateTo = existingRequest.DateTo,
+            ConfirmationType = existingRequest.ConfirmationType,
+            Files = request.Files ?? (existingRequest.Files?.Length > 0 ? new List<IFormFile>() : null)
+        });
+
         await _context.SaveChangesAsync();
     }
 
     private DateTime EnsureUtc(DateTime date) =>
-        date.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(date, DateTimeKind.Utc)
-            : date.ToUniversalTime();
+        date.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(date, DateTimeKind.Utc) : date.ToUniversalTime();
 
-    private void ValidateConfirmation(ConfirmationType type, List<IFormFile>? files)
+    private void ValidateDatesAndFiles(RequestModel request)
     {
-        switch (type)
+        switch (request.ConfirmationType)
         {
             case ConfirmationType.Medical:
+                if (request.Files == null || request.Files.Count == 0)
+                    throw new ArgumentException("Для больничного требуется минимум один файл.");
+                break;
             case ConfirmationType.Educational:
-                if (files == null || files.Count == 0)
-                    throw new ArgumentException("Для данного типа подтверждения требуется минимум один файл.");
+                if (!request.DateTo.HasValue)
+                    throw new ArgumentException("Для учебной заявки DateTo обязательна.");
+                if (request.DateTo.Value <= request.DateFrom)
+                    throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
+                if (request.Files == null || request.Files.Count == 0)
+                    throw new ArgumentException("Для учебной заявки требуется минимум один файл.");
                 break;
             case ConfirmationType.Family:
+                if (!request.DateTo.HasValue)
+                    throw new ArgumentException("Для семейной заявки DateTo обязательна.");
+                if (request.DateTo.Value <= request.DateFrom)
+                    throw new ArgumentException("DateTo должна быть позже чем DateFrom.");
                 break;
             default:
                 throw new ArgumentException("Неизвестный тип подтверждения.");

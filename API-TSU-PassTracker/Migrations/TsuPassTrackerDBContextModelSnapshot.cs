@@ -37,8 +37,12 @@ namespace API_TSU_PassTracker.Migrations
                     b.Property<DateTime>("DateFrom")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DateTo")
+                    b.Property<DateTime?>("DateTo")
                         .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<byte[][]>("Files")
+                        .IsRequired()
+                        .HasColumnType("bytea[]");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -51,30 +55,6 @@ namespace API_TSU_PassTracker.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Request");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.RequestFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<byte[]>("FileData")
-                        .IsRequired()
-                        .HasColumnType("bytea");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("RequestId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequestId");
-
-                    b.ToTable("RequestFile");
                 });
 
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.TokenBlackList", b =>
@@ -137,22 +117,6 @@ namespace API_TSU_PassTracker.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.RequestFile", b =>
-                {
-                    b.HasOne("API_TSU_PassTracker.Models.DB.Request", "Request")
-                        .WithMany("Files")
-                        .HasForeignKey("RequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Request");
-                });
-
-            modelBuilder.Entity("API_TSU_PassTracker.Models.DB.Request", b =>
-                {
-                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("API_TSU_PassTracker.Models.DB.User", b =>

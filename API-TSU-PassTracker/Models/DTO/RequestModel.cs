@@ -10,8 +10,7 @@ namespace API_TSU_PassTracker.Models.DTO
         [Required]
         public DateTime DateFrom { get; set; }
         
-        [Required]
-        public DateTime DateTo { get; set; }
+        public DateTime? DateTo { get; set; }
         
         [Required]
         public ConfirmationType ConfirmationType { get; set; }

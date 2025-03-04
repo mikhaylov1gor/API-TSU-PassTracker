@@ -47,8 +47,9 @@ public class RequestController : ControllerBase
     }
 
     [HttpPut("update/{id}")]
-    [Authorize(Roles = "Student")]
-    public async Task<IActionResult> UpdateRequest(Guid id, [FromBody] RequestUpdateModel request)
+    [Authorize(Roles = "Student, Dean")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UpdateRequest(Guid id, [FromForm] RequestUpdateModel request)
     {
         var user = HttpContext.User;
         await _requestService.UpdateRequest(id, request, user);
