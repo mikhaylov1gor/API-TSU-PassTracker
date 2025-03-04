@@ -34,7 +34,23 @@ namespace API_TSU_PassTracker.Controllers
 
                 var result = await _adminService.ChangeUserRole(userRoleUpdateModel);
                 return Ok(new { message = "Роль пользователя успешно обновлена" });
-            
+
+        }
+
+        [HttpPut("confirm-account")]
+        [Authorize(Roles = "Dean")]
+        public async Task<IActionResult> ConfirmAccount(Guid userId, bool isConfirmed)
+        {
+            var response = await _adminService.confirmAccount(userId, isConfirmed);
+            return response ? Ok("Статус аккаунта изменен") : NotFound("Пользователь не найден.");
+        }
+
+        [HttpPut("confirm-request")]
+        [Authorize(Roles = "Dean")]
+        public async Task<IActionResult> ConfirmRequest(Guid requestId, RequestStatus status)
+        {
+            var response = await _adminService.confirmRequest(requestId, status);
+            return response ? Ok("Статус заявки изменен") : NotFound("Заявка не найдена.");
         }
     }
 }
