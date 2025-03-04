@@ -52,5 +52,15 @@ namespace API_TSU_PassTracker.Controllers
             var response = await _adminService.confirmRequest(requestId, status);
             return response ? Ok("Статус заявки изменен") : NotFound("Заявка не найдена.");
         }
+
+        [HttpGet("users")]
+        [Authorize(Roles = "Dean")]
+        public async Task<ActionResult<List<UserModel>>> getAllUsers(
+            [FromQuery] bool onlyConfirmed, 
+            [FromQuery] List<Role> onlyTheseRoles)
+        {
+            var response = await _adminService.getUsers(onlyConfirmed, onlyTheseRoles);
+            return Ok(response);
+        }
     }
 }
