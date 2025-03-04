@@ -21,5 +21,7 @@ namespace API_TSU_PassTracker.Models.DTO
 
         [Required(ErrorMessage = "пароль обязателен для заполнения."), MinLength(6, ErrorMessage = "минимальная длина пароля 6 символов")]
         public string Password { get; set; }
+        [Required(ErrorMessage = "Номер группы обязателен для заполнения")]
+        public string Group { get; set; }
     }
 }

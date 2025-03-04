@@ -21,8 +21,8 @@ namespace API_TSU_PassTracker.Controllers
         [HttpPost("register")]
         public async Task<ActionResult> register(UserRegisterModel newUser)
         {
-            await _userService.register(newUser);
-            return Ok(new { message = "Пользователь зарегестрирован успешно." });
+            var response = await _userService.register(newUser);
+            return Ok(response);
         }
 
         [AllowAnonymous]
@@ -51,8 +51,16 @@ namespace API_TSU_PassTracker.Controllers
                 return Ok(new { message = "Выход выполнен успешно." });
         }
 
+        [HttpPost("profile")]
+        [Authorize]
+        public async Task<ActionResult<UserModel>> GetProfile()
+        {
+            var response = await _userService.getProfile(User);
+            return Ok(response);
+        }
+
         [HttpGet("requests")]
-        [Authorize(Roles = "Student")]
+        [Authorize(Roles = "Student, Dean")]
         public async Task<IActionResult> GetAllMyRequests()
         {
             var user = HttpContext.User;

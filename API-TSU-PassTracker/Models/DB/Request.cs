@@ -18,7 +18,7 @@ namespace API_TSU_PassTracker.Models.DB
         
         [Required]
         public ConfirmationType ConfirmationType { get; set; }
-        public byte[][] Files { get; set; }
+        public byte[][]? Files { get; set; }
     }
 }
 

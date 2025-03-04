@@ -12,9 +12,10 @@ namespace API_TSU_PassTracker.Services
 {
     public interface IUserService
     {
-        Task register(UserRegisterModel userRegisterModel);
+        Task<TokenResponseModel> register(UserRegisterModel newUser);
         Task<TokenResponseModel> login(LoginCredentialsModel loginCredentials);
         Task logout(string token, ClaimsPrincipal user);
+        Task<UserModel> getProfile(ClaimsPrincipal userClaims);
         Task<IEnumerable<LightRequestDTO>> GetAllMyRequests(ClaimsPrincipal user);
     }
     public class UserService : IUserService
@@ -37,7 +38,7 @@ namespace API_TSU_PassTracker.Services
             _tokenBlackListService = tokenBlackListService;
         }
 
-        public async Task register(UserRegisterModel newUser)
+        public async Task<TokenResponseModel> register(UserRegisterModel newUser)
         {
             var isExists = await _context.User
                 .AsNoTracking()
@@ -59,12 +60,14 @@ namespace API_TSU_PassTracker.Services
                 PasswordHash = hashedPassword,
                 Salt = salt,
                 Roles = new List<Role>{ Role.Dean }, 
-                Requests = new List<Request>()
+                Requests = new List<Request>(),
+                Group = newUser.Group
             };
 
             await _context.User.AddAsync(user);
             await _context.SaveChangesAsync();
 
+            return _jwtProvider.GenerateToken(user);
         }
 
         public async Task<TokenResponseModel> login(LoginCredentialsModel loginCredentials)
@@ -103,6 +106,36 @@ namespace API_TSU_PassTracker.Services
             }
 
             await _tokenBlackListService.AddTokenToBlackList(token);
+        }
+
+        public async Task<UserModel> getProfile (ClaimsPrincipal userClaims)
+        {
+            var userId = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null || !Guid.TryParse (userId, out var parsedId))
+            {
+                throw new UnauthorizedAccessException("Невозможно определить идентификатор пользователя.");
+            }
+
+            var user = await _context.User
+                .AsNoTracking()
+                .Where(u => u.Id == parsedId)
+                .Select(u => new UserModel
+                {
+                    Id = u.Id,
+                    IsConfirmed = u.IsConfirmed,
+                    Name = u.Name,
+                    Group = u.Name,
+                    Roles = u.Roles,
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException("Пользователь не найден.");
+            }
+
+            return user;
         }
 
         public async Task<IEnumerable<LightRequestDTO>> GetAllMyRequests(ClaimsPrincipal user)

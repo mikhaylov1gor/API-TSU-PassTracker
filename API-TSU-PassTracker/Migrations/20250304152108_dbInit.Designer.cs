@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    [Migration("20250304105335_init")]
-    partial class init
+    [Migration("20250304152108_dbInit")]
+    partial class dbInit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,7 +44,6 @@ namespace API_TSU_PassTracker.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.PrimitiveCollection<byte[][]>("Files")
-                        .IsRequired()
                         .HasColumnType("bytea[]");
 
                     b.Property<int>("Status")
@@ -83,6 +82,13 @@ namespace API_TSU_PassTracker.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Group")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsConfirmed")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Login")
                         .IsRequired()
