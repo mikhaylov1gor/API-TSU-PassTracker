@@ -112,7 +112,6 @@ namespace API_TSU_PassTracker.Services
             var requests = await _context.Request
            .Where(r => r.UserId == userId)
            .Include(r => r.User)
-           .Include(r => r.Files)
            .ToListAsync();
 
             var requestDtos = requests.Select(r => new LightRequestDTO
