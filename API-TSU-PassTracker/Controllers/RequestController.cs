@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using API_TSU_PassTracker.Models.DTO;
 using API_TSU_PassTracker.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ namespace API_TSU_PassTracker.Controllers;
 [Route("api/[controller]")]
 public class RequestController : ControllerBase
 {
-    private IRequestService _requestService;
+    private readonly IRequestService _requestService;
 
     public RequestController(IRequestService requestService)
     {
@@ -45,13 +46,12 @@ public class RequestController : ControllerBase
         return Ok(request);
     }
 
-    [HttpPut("update/{id}")] 
+    [HttpPut("update/{id}")]
     [Authorize(Roles = "Student")]
     public async Task<IActionResult> UpdateRequest(Guid id, [FromBody] RequestUpdateModel request)
     {
         var user = HttpContext.User;
-        await _requestService.UpdateRequest(id, request, user); 
+        await _requestService.UpdateRequest(id, request, user);
         return Ok(new { message = "Заявка обновлена успешно." });
     }
-
 }
