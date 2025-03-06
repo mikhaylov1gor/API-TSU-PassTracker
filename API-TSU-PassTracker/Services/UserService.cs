@@ -125,7 +125,7 @@ namespace API_TSU_PassTracker.Services
                     Id = u.Id,
                     IsConfirmed = u.IsConfirmed,
                     Name = u.Name,
-                    Group = u.Name,
+                    Group = u.Group,
                     Roles = u.Roles,
                 })
                 .FirstOrDefaultAsync();
