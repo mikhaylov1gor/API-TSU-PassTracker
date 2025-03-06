@@ -13,7 +13,7 @@ namespace API_TSU_PassTracker.Services
         Task<bool> ChangeUserRole(UserRoleUpdateModel model);
         Task<bool> confirmAccount(Guid userId, bool status);
         Task<bool> confirmRequest(Guid requestId, RequestStatus status);
-        Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles);
+        Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group);
     }
     public class AdminService : IAdminService
     {
@@ -72,7 +72,7 @@ namespace API_TSU_PassTracker.Services
             return true;
         }
 
-        public async Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles)
+        public async Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group)
         {
             var query = _context.User.AsQueryable();
 
@@ -84,6 +84,11 @@ namespace API_TSU_PassTracker.Services
             if (onlyTheseRoles != null && onlyTheseRoles.Any())
             {
                 query = query.Where(u => u.Roles.Any(ur => onlyTheseRoles.Contains(ur)));
+            }
+
+            if (group != null) 
+            {
+                query = query.Where(u => u.Group == group);
             }
 
             return await query

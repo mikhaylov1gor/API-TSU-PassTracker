@@ -21,13 +21,9 @@ namespace API_TSU_PassTracker.Models.DB
         public List<Role>? Roles { get; set; }
 
         [Required(ErrorMessage = "Логин обязателен для заполнения.")]
-        [MinLength(1, ErrorMessage = "Логин должен содержать хотя бы один символ.")]
-        [MaxLength(50, ErrorMessage = "Логин не должен превышать 50 символов.")]
-        [RegularExpression(@"^[a-zA-Z0-9_-]+$",
-            ErrorMessage = "Логин может содержать только буквы, цифры, подчеркивания и дефисы.")]
-        public string Login { get; set; }
+        [MinLength(6, ErrorMessage = "Минимальная длина логина 6 символов")]
 
-        [Required(ErrorMessage = "Хэш пароля обязателен для заполнения.")]
+        public string Login { get; set; }
         public string PasswordHash { get; set; }
 
         public string Salt {  get; set; }

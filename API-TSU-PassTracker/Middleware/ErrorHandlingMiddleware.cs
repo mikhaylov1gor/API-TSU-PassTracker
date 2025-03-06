@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using API_TSU_PassTracker.Models.DTO;
 using API_TSU_PassTracker.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Azure;
 
 namespace API_TSU_PassTracker.Middleware
 {
@@ -34,7 +35,15 @@ namespace API_TSU_PassTracker.Middleware
                 if (!string.IsNullOrEmpty(token) && await tokenBlackListService.iSTokenRevoked(token))
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsync("Token is revoked");
+                    var response = new ErrorResponse(
+                        status: 401,
+                        message: "Токен не валиден",
+                        details: null
+                    );
+
+                    context.Response.StatusCode = response.Status;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(response));
                     return;
                 }
             }

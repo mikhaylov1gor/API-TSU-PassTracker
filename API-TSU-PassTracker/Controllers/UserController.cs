@@ -51,7 +51,7 @@ namespace API_TSU_PassTracker.Controllers
                 return Ok(new { message = "Выход выполнен успешно." });
         }
 
-        [HttpPost("profile")]
+        [HttpGet("profile")]
         [Authorize]
         public async Task<ActionResult<UserModel>> GetProfile()
         {
