@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Numerics;
+using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace API_TSU_PassTracker.Services
 {
@@ -14,6 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<bool> confirmAccount(Guid userId, bool status);
         Task<bool> confirmRequest(Guid requestId, RequestStatus status);
         Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group);
+        Task<byte[]> downloadRequests(List<RequestStatus> status);
     }
     public class AdminService : IAdminService
     {
@@ -102,5 +105,33 @@ namespace API_TSU_PassTracker.Services
                 })
                 .ToListAsync();
         }
+
+        public async Task<byte[]> downloadRequests(List<RequestStatus> status)
+        {
+            var requests = await _context.Request
+                .Where(r => status.Contains(r.Status))
+                .Include(r => r.User)
+                .ToListAsync();
+
+            if (!requests.Any())
+            {
+                return Encoding.UTF8.GetBytes("Нет заявок с таким статусом.");
+            }
+
+            var content = string.Join("\n---\n", requests.Select(r =>
+                $"({string.Join(", ", r.User.Roles.Select(role => role.ToString()))})\n" +
+                $"ID заявки: {r.Id}\n" +
+                $"Пользователь: {r.User.Name} ({(r.User.IsConfirmed ? "Аккаунт подтвержден" : "Аккаунт не подтвержден")})\n" +
+                $"Группа: {r.User.Group}\n" +
+                $"Пропустил занятия с {r.DateFrom:dd.MM.yyyy} по {r.DateTo:dd.MM.yyyy}\n" +
+                $"Причина: {(r.ConfirmationType == ConfirmationType.Family? "Семейная" : 
+                            r.ConfirmationType == ConfirmationType.Medical ? "Медицинская" : "Учебная")}\n" +
+                $"Статус заявки: {(r.Status == RequestStatus.Approved ? "Подтверждена" :
+                            r.Status == RequestStatus.Rejected ? "Отклонена" : "В обработке")}"
+            ));
+
+            return Encoding.UTF8.GetBytes(content);
+        }
+
     }
 }

@@ -63,5 +63,14 @@ namespace API_TSU_PassTracker.Controllers
             var response = await _adminService.getUsers(onlyConfirmed, onlyTheseRoles, group);
             return Ok(response);
         }
+
+        [HttpGet("download-requests")]
+        [Authorize(Roles = "Teacher, Dean")]
+        public async Task<IActionResult> downloadRequests(
+            [FromQuery] List<RequestStatus> status)
+        {
+            var response = await _adminService.downloadRequests(status);
+            return File(response, "text/plain", "requests.txt");
+        }
     }
 }
