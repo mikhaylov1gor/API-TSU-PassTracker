@@ -1,6 +1,7 @@
 ﻿using API_TSU_PassTracker.Infrastructure;
 using API_TSU_PassTracker.Models.DB;
 using API_TSU_PassTracker.Models.DTO;
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ namespace API_TSU_PassTracker.Services
         Task<bool> confirmAccount(Guid userId, bool status);
         Task<bool> confirmRequest(Guid requestId, RequestStatus status);
         Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group);
-        Task<byte[]> downloadRequests(List<RequestStatus> status);
+        Task<byte[]> downloadRequests();
     }
     public class AdminService : IAdminService
     {
@@ -106,32 +107,56 @@ namespace API_TSU_PassTracker.Services
                 .ToListAsync();
         }
 
-        public async Task<byte[]> downloadRequests(List<RequestStatus> status)
+        public async Task<byte[]> downloadRequests()
         {
             var requests = await _context.Request
-                .Where(r => status.Contains(r.Status))
+                .Where(r => r.Status == RequestStatus.Approved)
                 .Include(r => r.User)
                 .ToListAsync();
 
             if (!requests.Any())
             {
-                return Encoding.UTF8.GetBytes("Нет заявок с таким статусом.");
+                using (var workbook = new XLWorkbook())
+                {
+                    var ws = workbook.Worksheets.Add("Заявки");
+                    ws.Cell("A1").Value = "Нет подтвержденных заявок";
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        return stream.ToArray();
+                    }
+                }
             }
 
-            var content = string.Join("\n---\n", requests.Select(r =>
-                $"({string.Join(", ", r.User.Roles.Select(role => role.ToString()))})\n" +
-                $"ID заявки: {r.Id}\n" +
-                $"Пользователь: {r.User.Name} ({(r.User.IsConfirmed ? "Аккаунт подтвержден" : "Аккаунт не подтвержден")})\n" +
-                $"Группа: {r.User.Group}\n" +
-                $"Пропустил занятия с {r.DateFrom:dd.MM.yyyy} по {r.DateTo:dd.MM.yyyy}\n" +
-                $"Причина: {(r.ConfirmationType == ConfirmationType.Family? "Семейная" : 
-                            r.ConfirmationType == ConfirmationType.Medical ? "Медицинская" : "Учебная")}\n" +
-                $"Статус заявки: {(r.Status == RequestStatus.Approved ? "Подтверждена" :
-                            r.Status == RequestStatus.Rejected ? "Отклонена" : "В обработке")}"
-            ));
+            using (var workbook = new XLWorkbook())
+            {
+                var ws = workbook.Worksheets.Add("Заявки");
 
-            return Encoding.UTF8.GetBytes(content);
+                ws.Cell("A1").Value = "Пользователь";
+                ws.Cell("B1").Value = "Группа";
+                ws.Cell("C1").Value = "Дата начала";
+                ws.Cell("D1").Value = "Дата окончания";
+                ws.Cell("E1").Value = "Причина";
+
+                int row = 2;
+                foreach (var req in requests)
+                {
+                    ws.Cell(row, 1).Value = $"{req.User.Name}";
+                    ws.Cell(row, 2).Value = $"{req.User.Group}";
+                    ws.Cell(row, 3).Value = $"{req.DateFrom:dd.MM.yyyy}";
+                    ws.Cell(row, 4).Value = $"{req.DateTo:dd.MM.yyyy}";
+                    ws.Cell(row, 5).Value = $"{(req.ConfirmationType == ConfirmationType.Family ? "Семейная" :
+                        req.ConfirmationType == ConfirmationType.Educational ? "Учебная" : "Медицинская")}";
+
+                    row++;
+                }
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    return stream.ToArray();
+                }
+            }
         }
-
     }
 }

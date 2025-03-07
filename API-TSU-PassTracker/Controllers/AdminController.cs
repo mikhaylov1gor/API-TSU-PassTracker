@@ -66,11 +66,10 @@ namespace API_TSU_PassTracker.Controllers
 
         [HttpGet("download-requests")]
         [Authorize(Roles = "Teacher, Dean")]
-        public async Task<IActionResult> downloadRequests(
-            [FromQuery] List<RequestStatus> status)
+        public async Task<IActionResult> downloadRequests()
         {
-            var response = await _adminService.downloadRequests(status);
-            return File(response, "text/plain", "requests.txt");
+            var response = await _adminService.downloadRequests();
+            return File(response, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "requests.xlsx");
         }
     }
 }
