@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using API_TSU_PassTracker.Models.DTO;
 using API_TSU_PassTracker.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Azure;
+using System.Threading.Tasks;
 
 namespace API_TSU_PassTracker.Middleware
 {
@@ -27,29 +27,27 @@ namespace API_TSU_PassTracker.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var tokenBlackListService = scope.ServiceProvider.GetRequiredService<ITokenBlackListService>();
-
-                var token = context.Request.Headers["Authorization"].ToString()?.Split(" ").Last();
-                if (!string.IsNullOrEmpty(token) && await tokenBlackListService.iSTokenRevoked(token))
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    var response = new ErrorResponse(
-                        status: 401,
-                        message: "Токен не валиден",
-                        details: null
-                    );
-
-                    context.Response.StatusCode = response.Status;
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(response));
-                    return;
-                }
-            }
-
             try
             {
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var tokenBlackListService = scope.ServiceProvider.GetRequiredService<ITokenBlackListService>();
+
+                    var token = context.Request.Headers["Authorization"].ToString()?.Split(" ").Last();
+                    if (!string.IsNullOrEmpty(token) && await tokenBlackListService.iSTokenRevoked(token))
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        var response = new ErrorResponse(
+                            status: 401,
+                            message: "Токен не валиден",
+                            details: null
+                        );
+                        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                        return;
+                    }
+                }
+
                 await _next(context);
             }
             catch (Exception ex)
@@ -62,14 +60,24 @@ namespace API_TSU_PassTracker.Middleware
         {
             _logger.LogError(ex, "Произошла необработанная ошибка");
 
+            
+            if (context.Response.HasStarted)
+            {
+                _logger.LogWarning("Ответ уже начал отправляться, обработка ошибки невозможна.");
+                return;
+            }
+
+            
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json";
+
+            
             var response = new ErrorResponse(
-                status: StatusCodes.Status500InternalServerError,
+                status: context.Response.StatusCode,
                 message: "Внутренняя ошибка сервера",
                 details: _env.IsDevelopment() ? ex.ToString() : null
             );
 
-            context.Response.StatusCode = response.Status;
-            context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
     }
