@@ -22,7 +22,6 @@ namespace API_TSU_PassTracker.Services
     public class AdminService : IAdminService
     {
         private readonly TsuPassTrackerDBContext _context;
-        
 
         public AdminService(
             TsuPassTrackerDBContext context)
