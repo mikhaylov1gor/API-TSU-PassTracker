@@ -86,10 +86,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtOptions:Issuer"], 
+            ValidAudience = builder.Configuration["JwtOptions:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtOptions:SecretKey"])),
             ClockSkew = TimeSpan.Zero
         };
@@ -98,27 +100,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnAuthenticationFailed = async context =>
             {
-                context.NoResult();
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Response.ContentType = "application/json";
                 var error = new ErrorResponse(
                     status: 401,
-                    message: "Ошибка авторизации",
-                    details: builder.Environment.IsDevelopment() ? context.Exception.Message : null
+                    message: "Токен не валиден",
+                    details: null
                 );
                 await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));
             },
             OnChallenge = async context =>
             {
-                context.HandleResponse();
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.ContentType = "application/json";
-                var error = new ErrorResponse(
-                    status: 401,
-                    message: "Требуется авторизация",
-                    details: null
-                );
-                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    context.Response.ContentType = "application/json";
+                    var error = new ErrorResponse(
+                        status: 401,
+                        message: "Требуется авторизация",
+                        details: null
+                    );
+                    await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(error));
+                }
             },
             OnForbidden = async context =>
             {
@@ -147,8 +150,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCustomErrorHandling();
 
+app.UseCustomErrorHandling(); 
 app.UseAuthentication();
 app.UseAuthorization();
 

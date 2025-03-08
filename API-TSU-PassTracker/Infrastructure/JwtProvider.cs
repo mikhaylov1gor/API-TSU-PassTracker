@@ -42,6 +42,8 @@ namespace API_TSU_PassTracker.Infrastructure
                 SecurityAlgorithms.HmacSha256);
 
             var JwtToken = new JwtSecurityToken(
+                issuer: _options.Issuer, 
+                audience: _options.Audience,
                 claims: claims,
                 signingCredentials: signingCredentials,
                 expires: DateTime.UtcNow.AddHours(_options.ExpiresHours));
