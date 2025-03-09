@@ -30,7 +30,7 @@ public class RequestController : ControllerBase
 
     [HttpGet("all")]
     [Authorize(Roles = "Dean")]
-    public async Task<IActionResult> GetAllRequests()
+    public async Task<ActionResult<ListLightRequestsDTO>> GetAllRequests()
     {
         var user = HttpContext.User;
         var requests = await _requestService.GetAllRequests(user);
