@@ -16,7 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<TokenResponseModel> login(LoginCredentialsModel loginCredentials);
         Task logout(string token, ClaimsPrincipal user);
         Task<UserModel> getProfile(ClaimsPrincipal userClaims);
-        Task<IEnumerable<LightRequestDTO>> GetAllMyRequests(ClaimsPrincipal user);
+        Task<ListLightRequestsDTO> GetAllMyRequests(ClaimsPrincipal user);
     }
     public class UserService : IUserService
     {
@@ -138,7 +138,7 @@ namespace API_TSU_PassTracker.Services
             return user;
         }
 
-        public async Task<IEnumerable<LightRequestDTO>> GetAllMyRequests(ClaimsPrincipal user)
+        public async Task<ListLightRequestsDTO> GetAllMyRequests(ClaimsPrincipal user)
         {
             var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
 
@@ -147,18 +147,22 @@ namespace API_TSU_PassTracker.Services
            .Include(r => r.User)
            .ToListAsync();
 
-            var requestDtos = requests.Select(r => new LightRequestDTO
+            var lightRequestsDtos = requests.Select(r => new LightRequestDTO
             {
                 Id = r.Id,
                 CreatedDate = r.CreatedDate,
                 DateFrom = r.DateFrom,
                 DateTo = r.DateTo,
-                UserName = r.User.Name,
                 Status = r.Status,
-                ConfirmationType = r.ConfirmationType
-            });
+                ConfirmationType = r.ConfirmationType,
+            }).ToList();
 
-            return requestDtos;
+            var listLightRequestsDTO = new ListLightRequestsDTO
+            {
+                ListLightRequests = lightRequestsDtos
+            };
+
+            return listLightRequestsDTO;
         }
     }
 }

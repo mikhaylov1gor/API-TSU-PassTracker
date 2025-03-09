@@ -12,7 +12,7 @@ namespace API_TSU_PassTracker.Services;
 public interface IRequestService
 {
     Task<Guid> CreateRequest(RequestModel request, ClaimsPrincipal user);
-    Task<IEnumerable<LightRequestDTO>> GetAllRequests(ClaimsPrincipal user);
+    Task<ListLightRequestsDTO> GetAllRequests(ClaimsPrincipal user);
     Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user);
     Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user);
 }
@@ -58,22 +58,28 @@ public class RequestService : IRequestService
         return dbRequest.Id;
     }
 
-    public async Task<IEnumerable<LightRequestDTO>> GetAllRequests(ClaimsPrincipal user)
+    public async Task<ListLightRequestsDTO> GetAllRequests(ClaimsPrincipal user)
     {
         var requests = await _context.Request
             .Include(r => r.User)
             .ToListAsync();
 
-        return requests.Select(r => new LightRequestDTO
+        var lightRequestsDtos = requests.Select(r => new LightRequestDTO
+            {
+                Id = r.Id,
+                CreatedDate = r.CreatedDate,
+                DateFrom = r.DateFrom,
+                DateTo = r.DateTo,
+                Status = r.Status,
+                ConfirmationType = r.ConfirmationType,
+            }).ToList();
+
+        var listLightRequestsDTO = new ListLightRequestsDTO
         {
-            Id = r.Id,
-            CreatedDate = r.CreatedDate,
-            DateFrom = r.DateFrom,
-            DateTo = r.DateTo,
-            UserName = r.User.Name,
-            Status = r.Status,
-            ConfirmationType = r.ConfirmationType
-        });
+            ListLightRequests = lightRequestsDtos
+        };
+
+        return listLightRequestsDTO;
     }
 
     public async Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user)
