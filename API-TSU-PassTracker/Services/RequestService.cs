@@ -161,12 +161,15 @@ public class RequestService : IRequestService
             }
         }
 
+        // update request status
+        existingRequest.Status = RequestStatus.Pending;
+
         ValidateDatesAndFiles(new RequestModel
         {
             DateFrom = existingRequest.DateFrom,
             DateTo = existingRequest.DateTo,
             ConfirmationType = existingRequest.ConfirmationType,
-            Files = request.Files ?? (existingRequest.Files?.Length > 0 ? new List<IFormFile>() : null)
+            Files = request.Files ?? (existingRequest.Files?.Length > 0 ? new List<IFormFile>() : null),
         });
 
         await _context.SaveChangesAsync();
