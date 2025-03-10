@@ -71,6 +71,7 @@ public class RequestService : IRequestService
                 DateFrom = r.DateFrom,
                 DateTo = r.DateTo,
                 Status = r.Status,
+                UserName = r.User.Name,
                 ConfirmationType = r.ConfirmationType,
             }).ToList();
 

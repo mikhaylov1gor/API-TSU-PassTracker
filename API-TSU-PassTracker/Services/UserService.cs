@@ -153,6 +153,7 @@ namespace API_TSU_PassTracker.Services
                 CreatedDate = r.CreatedDate,
                 DateFrom = r.DateFrom,
                 DateTo = r.DateTo,
+                UserName = r.User.Name,
                 Status = r.Status,
                 ConfirmationType = r.ConfirmationType,
             }).ToList();
