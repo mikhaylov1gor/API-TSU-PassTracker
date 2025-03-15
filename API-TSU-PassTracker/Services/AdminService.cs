@@ -16,7 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<bool> ChangeUserRole(UserRoleUpdateModel model);
         Task<bool> confirmAccount(Guid userId, bool status);
         Task<bool> confirmRequest(Guid requestId, RequestStatus status);
-        Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group);
+        Task<ActionResult<UserPagedListModel>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group, int page, int size);
         Task<byte[]> downloadRequests();
     }
     public class AdminService : IAdminService
@@ -75,9 +75,14 @@ namespace API_TSU_PassTracker.Services
             return true;
         }
 
-        public async Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group)
+        public async Task<ActionResult<UserPagedListModel>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group, int page, int size)
         {
             var query = _context.User.AsQueryable();
+
+            if (page < 1 || size < 1)
+            {
+                throw new ArgumentException("Номер страницы и размер не могут быть меньше 1");
+            }
 
             if (onlyConfirmed)
             {
@@ -94,7 +99,11 @@ namespace API_TSU_PassTracker.Services
                 query = query.Where(u => u.Group == group);
             }
 
-            return await query
+            var totalItems = await query.CountAsync();
+
+            var users = await query
+                .Skip((page - 1) * size)
+                .Take(size)
                 .Select(u => new UserModel
                 {
                     Id = u.Id,
@@ -104,6 +113,22 @@ namespace API_TSU_PassTracker.Services
                     Roles = u.Roles,
                 })
                 .ToListAsync();
+
+            var pageInfo = new PageInfoModel
+            {
+                size = size,
+                count = (int)Math.Ceiling((double)totalItems / size),
+                current = page
+            };
+
+            if (pageInfo.current > pageInfo.count)
+                throw new ArgumentException("Номер текущей страницы превышает количество страниц");
+
+            return new UserPagedListModel
+            {
+                users = users,
+                pagination = pageInfo
+            };
         }
 
         public async Task<byte[]> downloadRequests()

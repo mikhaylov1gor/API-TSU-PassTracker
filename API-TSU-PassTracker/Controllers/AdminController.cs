@@ -58,9 +58,11 @@ namespace API_TSU_PassTracker.Controllers
         public async Task<ActionResult<List<UserModel>>> getAllUsers(
             [FromQuery] bool onlyConfirmed, 
             [FromQuery] List<Role> onlyTheseRoles,
-            [FromQuery] string? group)
+            [FromQuery] string? group,
+            [FromQuery] int page,
+            [FromQuery] int size)
         {
-            var response = await _adminService.getUsers(onlyConfirmed, onlyTheseRoles, group);
+            var response = await _adminService.getUsers(onlyConfirmed, onlyTheseRoles, group, page, size);
             return Ok(response);
         }
 
