@@ -10,6 +10,7 @@ namespace API_TSU_PassTracker.Services
     {
         Task SeedUsers();
     }
+
     public class SeedDataService : ISeedDataService
     {
         private readonly TsuPassTrackerDBContext _context;
@@ -48,9 +49,27 @@ namespace API_TSU_PassTracker.Services
                             PasswordHash = hashedPassword,
                             Salt = salt,
                             Roles = tempUser.Roles
-                                .Select(roleString => Enum.Parse<Role>(roleString.Replace("Role.", "")))
+                                .Select(roleString => Enum.Parse<Role>(roleString))
                                 .ToList(),
                         };
+
+                        if (tempUser.Requests != null)
+                        {
+                            user.Requests = tempUser.Requests
+                                .Select(requestSeed => new Request
+                                {
+                                    Id = Guid.NewGuid(),
+                                    CreatedDate = DateTime.SpecifyKind(requestSeed.CreatedDate, DateTimeKind.Utc),
+                                    DateFrom = DateTime.SpecifyKind(requestSeed.DateFrom, DateTimeKind.Utc),
+                                    DateTo = requestSeed.DateTo != null
+                                        ? DateTime.SpecifyKind(requestSeed.DateTo.Value, DateTimeKind.Utc)
+                                        : (DateTime?)null,
+                                    Status = Enum.Parse<RequestStatus>(requestSeed.Status),
+                                    ConfirmationType = Enum.Parse<ConfirmationType>(requestSeed.ConfirmationType),
+                                    UserId = user.Id
+                                })
+                                .ToList();
+                        }
 
                         users.Add(user);
                     }
@@ -68,8 +87,16 @@ namespace API_TSU_PassTracker.Services
             public string Group { get; set; }
             public List<string> Roles { get; set; }
             public string Login { get; set; }
-            public List<Request> Requests { get; set; }
+            public List<RequestSeedModel> Requests { get; set; } 
+        }
+
+        public class RequestSeedModel
+        {
+            public DateTime CreatedDate { get; set; }
+            public DateTime DateFrom { get; set; }
+            public DateTime? DateTo { get; set; }
+            public string Status { get; set; }
+            public string ConfirmationType { get; set; }
         }
     }
 }
-
