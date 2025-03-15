@@ -29,11 +29,15 @@ public class RequestController : ControllerBase
     }
 
     [HttpGet("all")]
-    [Authorize(Roles = "Dean")]
-    public async Task<ActionResult<ListLightRequestsDTO>> GetAllRequests()
+    [Authorize(Roles = "Dean, Teacher")]
+    public async Task<ActionResult<ListLightRequestsDTO>> GetAllRequests(
+        [FromQuery] ConfirmationType confirmationType,
+        [FromQuery] RequestStatus status,
+        [FromQuery] String? userName,
+        [FromQuery] SortEnum sort)
     {
         var user = HttpContext.User;
-        var requests = await _requestService.GetAllRequests(user);
+        var requests = await _requestService.GetAllRequests(confirmationType, status, userName, user, sort);
         return Ok(requests);
     }
 
