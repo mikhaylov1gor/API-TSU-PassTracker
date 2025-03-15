@@ -16,7 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<bool> ChangeUserRole(UserRoleUpdateModel model);
         Task<bool> confirmAccount(Guid userId, bool status);
         Task<bool> confirmRequest(Guid requestId, RequestStatus status);
-        Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group);
+        Task<ActionResult<UserPagedListModel>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group, int page, int size);
         Task<byte[]> downloadRequests(DateTime? dateFrom, DateTime? dateTo);
     }
     public class AdminService : IAdminService

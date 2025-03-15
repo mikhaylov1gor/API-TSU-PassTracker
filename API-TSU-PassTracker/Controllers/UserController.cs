@@ -64,11 +64,13 @@ namespace API_TSU_PassTracker.Controllers
         public async Task<ActionResult<ListLightRequestsDTO>> GetAllMyRequests(
             [FromQuery] ConfirmationType confirmationType,
             [FromQuery] RequestStatus status,
-            [FromQuery] SortEnum sort
+            [FromQuery] SortEnum sort,
+            [FromQuery] int page,
+            [FromQuery] int size
         )
         {
             var user = HttpContext.User;
-            var requests = await _userService.GetAllMyRequests(confirmationType, status, sort, user);
+            var requests = await _userService.GetAllMyRequests(confirmationType, status, sort, user, page, size);
             return Ok(requests);
         }
     }

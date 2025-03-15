@@ -13,7 +13,7 @@ namespace API_TSU_PassTracker.Services;
 public interface IRequestService
 {
     Task<Guid> CreateRequest(RequestModel request, ClaimsPrincipal user);
-    Task<ActionResult<ListLightRequestsDTO>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String userName,  ClaimsPrincipal user, SortEnum sort);
+    Task<ActionResult<LightRequestsPagedListModel>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String? userName, ClaimsPrincipal user, SortEnum sort, int page, int size);
     Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user);
     Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user);
 }
@@ -59,15 +59,18 @@ public class RequestService : IRequestService
         return dbRequest.Id;
     }
 
-    public async Task<ActionResult<ListLightRequestsDTO>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String? userName,  ClaimsPrincipal user, SortEnum sort)
+    public async Task<ActionResult<LightRequestsPagedListModel>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String? userName,  ClaimsPrincipal user, SortEnum sort, int page, int size)
     {
         var requests =  _context.Request.AsQueryable();
             
+        if (page < 1 || size < 1)
+        {
+            throw new ArgumentException("Номер страницы и размер не могут быть меньше 1");
+        }
 
         if(userName != null) {
             requests = requests.Where(r => r.User.Name.Contains(userName));
         }
-
 
         requests = status switch
         {
@@ -92,7 +95,12 @@ public class RequestService : IRequestService
                 _ => throw new ArgumentException("Неизвестный тип подтвреждающих документов."),
             };
 
-        var lightRequestsDtos = await requests.Select(r => new LightRequestDTO
+        var totalItems = await requests.CountAsync();
+
+        var lightRequestsDtos = await requests
+            .Skip((page - 1) * size)
+            .Take(size)
+            .Select(r => new LightRequestDTO
             {
                 Id = r.Id,
                 CreatedDate = r.CreatedDate,
@@ -108,7 +116,21 @@ public class RequestService : IRequestService
             ListLightRequests = lightRequestsDtos
         };
 
-        return listLightRequestsDTO;
+        var pageInfo = new PageInfoModel
+        {
+            size = size,
+            count = (int)Math.Ceiling((double)totalItems / size),
+            current = page
+        };
+
+        if (pageInfo.current > pageInfo.count)
+            throw new ArgumentException("Номер текущей страницы превышает количество страниц");
+
+        return new LightRequestsPagedListModel
+        {
+            requests = listLightRequestsDTO,
+            pagination = pageInfo,
+        };
     }
 
     public async Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user)

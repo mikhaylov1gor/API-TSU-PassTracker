@@ -34,10 +34,12 @@ public class RequestController : ControllerBase
         [FromQuery] ConfirmationType confirmationType,
         [FromQuery] RequestStatus status,
         [FromQuery] String? userName,
-        [FromQuery] SortEnum sort)
+        [FromQuery] SortEnum sort,
+        [FromQuery] int page,
+        [FromQuery] int size)
     {
         var user = HttpContext.User;
-        var requests = await _requestService.GetAllRequests(confirmationType, status, userName, user, sort);
+        var requests = await _requestService.GetAllRequests(confirmationType, status, userName, user, sort, page, size);
         return Ok(requests);
     }
 

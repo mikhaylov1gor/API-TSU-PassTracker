@@ -16,7 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<TokenResponseModel> login(LoginCredentialsModel loginCredentials);
         Task logout(string token, ClaimsPrincipal user);
         Task<UserModel> getProfile(ClaimsPrincipal userClaims);
-        Task<ListLightRequestsDTO> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user);
+        Task<LightRequestsPagedListModel> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user, int page, int size);
     }
     public class UserService : IUserService
     {
@@ -138,10 +138,14 @@ namespace API_TSU_PassTracker.Services
             return user;
         }
 
-        public async Task<ListLightRequestsDTO> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user)
+        public async Task<LightRequestsPagedListModel> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user, int page, int size)
         {
-            
             var requests =  _context.Request.AsQueryable();
+
+            if (page < 1 || size < 1)
+            {
+                throw new ArgumentException("Номер страницы и размер не могут быть меньше 1");
+            }
 
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
 
@@ -178,23 +182,42 @@ namespace API_TSU_PassTracker.Services
                 _ => throw new ArgumentException("Неизвестный тип подтвреждающих документов."),
             };
 
-            var lightRequestsDtos = await requests.Select(r => new LightRequestDTO
-            {
-                Id = r.Id,
-                CreatedDate = r.CreatedDate,
-                DateFrom = r.DateFrom,
-                DateTo = r.DateTo,
-                UserName = r.User.Name,
-                Status = r.Status,
-                ConfirmationType = r.ConfirmationType,
-            }).ToListAsync();
+            var totalItems = await requests.CountAsync();
+
+            var lightRequestsDtos = await requests
+                .Skip((page - 1) * size)
+                .Take(size)
+                .Select(r => new LightRequestDTO
+                {
+                    Id = r.Id,
+                    CreatedDate = r.CreatedDate,
+                    DateFrom = r.DateFrom,
+                    DateTo = r.DateTo,
+                    Status = r.Status,
+                    UserName = r.User.Name,
+                    ConfirmationType = r.ConfirmationType,
+                }).ToListAsync();
 
             var listLightRequestsDTO = new ListLightRequestsDTO
             {
                 ListLightRequests = lightRequestsDtos
             };
 
-            return listLightRequestsDTO;
+            var pageInfo = new PageInfoModel
+            {
+                size = size,
+                count = (int)Math.Ceiling((double)totalItems / size),
+                current = page
+            };
+
+            if (pageInfo.current > pageInfo.count)
+                throw new ArgumentException("Номер текущей страницы превышает количество страниц");
+
+            return new LightRequestsPagedListModel
+            {
+                requests = listLightRequestsDTO,
+                pagination = pageInfo,
+            };
         }
     }
 }
