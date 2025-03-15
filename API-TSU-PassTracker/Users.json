@@ -1,0 +1,58 @@
+﻿[
+  {
+    "isConfirmed": true,
+    "Name": "Студенческий Василий Обучаемович",
+    "Group": "972303",
+    "Roles": [
+      "Student"
+    ],
+    "Login": "student1"
+  },
+  {
+    "isConfirmed": false,
+    "Name": "Несдающая Виктория Отчисляемовна",
+    "Group": "972303",
+    "Roles": [
+      "Student"
+    ],
+    "Login": "student2",
+  },
+  {
+    "isConfirmed": true,
+    "Name": "Вечноболеющий Александр Апчхихович",
+    "Group": "972303",
+    "Roles": [
+      "Student"
+    ],
+    "Login": "student3"
+  },
+  {
+    "isConfirmed": true,
+    "Name": "Могущественная Антонина Деканатовна",
+    "Group": "dean",
+    "Roles": [
+      "Dean"
+    ],
+    "Login": "admin1"
+  },
+  {
+    "isConfirmed": true,
+    "Name": "Всезнающий Петр Преподавателевич",
+    "Group": "teacher",
+    "Roles": [
+      "Teacher"
+    ],
+    "Login": "teacher1"
+  },
+  {
+    "isConfirmed": true,
+    "Name": "Ученический Препод Админович",
+    "Group": "ALLMIGHTY",
+    "Roles": [
+      "Student",
+      "Teacher",
+      "Dean"
+    ],
+    "Login": "AllInOne"
+  }
+]
