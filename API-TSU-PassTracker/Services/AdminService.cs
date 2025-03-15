@@ -121,9 +121,6 @@ namespace API_TSU_PassTracker.Services
                 current = page
             };
 
-            if (pageInfo.current > pageInfo.count)
-                throw new ArgumentException("Номер текущей страницы превышает количество страниц");
-
             return new UserPagedListModel
             {
                 users = users,

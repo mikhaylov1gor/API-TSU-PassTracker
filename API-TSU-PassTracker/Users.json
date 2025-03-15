@@ -1,6 +1,6 @@
 ﻿[
   {
-    "isConfirmed": true,
+    "IsConfirmed": true,
     "Name": "Студенческий Василий Обучаемович",
     "Group": "972303",
     "Roles": [
@@ -9,16 +9,16 @@
     "Login": "student1"
   },
   {
-    "isConfirmed": false,
+    "IsConfirmed": false,
     "Name": "Несдающая Виктория Отчисляемовна",
     "Group": "972303",
     "Roles": [
       "Student"
     ],
-    "Login": "student2",
+    "Login": "student2"
   },
   {
-    "isConfirmed": true,
+    "IsConfirmed": true,
     "Name": "Вечноболеющий Александр Апчхихович",
     "Group": "972303",
     "Roles": [
@@ -27,7 +27,7 @@
     "Login": "student3"
   },
   {
-    "isConfirmed": true,
+    "IsConfirmed": true,
     "Name": "Могущественная Антонина Деканатовна",
     "Group": "dean",
     "Roles": [
@@ -36,7 +36,7 @@
     "Login": "admin1"
   },
   {
-    "isConfirmed": true,
+    "IsConfirmed": true,
     "Name": "Всезнающий Петр Преподавателевич",
     "Group": "teacher",
     "Roles": [
@@ -45,9 +45,9 @@
     "Login": "teacher1"
   },
   {
-    "isConfirmed": true,
+    "IsConfirmed": true,
     "Name": "Ученический Препод Админович",
-    "Group": "ALLMIGHTY",
+    "Group": "teacher",
     "Roles": [
       "Student",
       "Teacher",

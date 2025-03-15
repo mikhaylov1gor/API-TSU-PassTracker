@@ -55,11 +55,12 @@ namespace API_TSU_PassTracker.Services
             var user = new User
             {
                 Id = Guid.NewGuid(),
+                IsConfirmed = false,
                 Name = newUser.Name,
                 Login = newUser.Login,
                 PasswordHash = hashedPassword,
                 Salt = salt,
-                Roles = new List<Role>{ Role.Student }, 
+                Roles = new List<Role> { Role.Student },
                 Requests = new List<Request>(),
                 Group = newUser.Group
             };
@@ -209,9 +210,6 @@ namespace API_TSU_PassTracker.Services
                 count = (int)Math.Ceiling((double)totalItems / size),
                 current = page
             };
-
-            if (pageInfo.current > pageInfo.count)
-                throw new ArgumentException("Номер текущей страницы превышает количество страниц");
 
             return new LightRequestsPagedListModel
             {

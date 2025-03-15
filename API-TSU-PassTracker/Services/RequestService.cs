@@ -123,9 +123,6 @@ public class RequestService : IRequestService
             current = page
         };
 
-        if (pageInfo.current > pageInfo.count)
-            throw new ArgumentException("Номер текущей страницы превышает количество страниц");
-
         return new LightRequestsPagedListModel
         {
             requests = listLightRequestsDTO,

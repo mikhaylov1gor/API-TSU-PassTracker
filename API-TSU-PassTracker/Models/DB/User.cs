@@ -9,7 +9,7 @@ namespace API_TSU_PassTracker.Models.DB
     {
         public Guid Id { get; set; }
 
-        public bool IsConfirmed { get; set; } = false;
+        public bool IsConfirmed { get; set; }
 
         [Required(ErrorMessage = "Имя обязательно для заполнения.")]
         [MinLength(1, ErrorMessage = "Имя должно содержать хотя бы один символ.")]
