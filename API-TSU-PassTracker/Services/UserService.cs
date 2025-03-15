@@ -16,7 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<TokenResponseModel> login(LoginCredentialsModel loginCredentials);
         Task logout(string token, ClaimsPrincipal user);
         Task<UserModel> getProfile(ClaimsPrincipal userClaims);
-        Task<ListLightRequestsDTO> GetAllMyRequests(ClaimsPrincipal user);
+        Task<ListLightRequestsDTO> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user);
     }
     public class UserService : IUserService
     {
@@ -138,24 +138,56 @@ namespace API_TSU_PassTracker.Services
             return user;
         }
 
-        public async Task<ListLightRequestsDTO> GetAllMyRequests(ClaimsPrincipal user)
+        public async Task<ListLightRequestsDTO> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user)
         {
-            var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
+            
+            var requests =  _context.Request.AsQueryable();
 
-            var requests = await _context.Request
-           .Where(r => r.UserId == userId)
-           .Include(r => r.User)
-           .ToListAsync();
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
 
-            var lightRequestsDtos = requests.Select(r => new LightRequestDTO
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                requests = requests.Where(r => r.User.Id == userId);
+            }
+            else
+            {
+                throw new Exception("Невозможно идентифицировать пользователя");
+            }
+           
+
+           requests = status switch
+            {
+                RequestStatus.Pending => requests.Where(r => r.Status == RequestStatus.Pending),
+                RequestStatus.Approved => requests.Where(r => r.Status == RequestStatus.Approved),
+                RequestStatus.Rejected => requests.Where(r => r.Status == RequestStatus.Rejected),
+                _ => throw new ArgumentException("Неизвестный статус запроса."),
+            };
+
+            requests = sort switch
+            {
+                SortEnum.CreatedAsc => requests.OrderBy(r => r.CreatedDate),
+                SortEnum.CreatedDesc => requests.OrderByDescending(r => r.CreatedDate),
+                _ => throw new ArgumentException("Неизвестный тип сортировки."),
+            };
+
+            requests = confirmationType switch
+            {
+                ConfirmationType.Educational => requests.Where(r => r.ConfirmationType == ConfirmationType.Educational),
+                ConfirmationType.Medical => requests.Where(r => r.ConfirmationType == ConfirmationType.Medical),
+                ConfirmationType.Family => requests.Where(r => r.ConfirmationType == ConfirmationType.Family),
+                _ => throw new ArgumentException("Неизвестный тип подтвреждающих документов."),
+            };
+
+            var lightRequestsDtos = await requests.Select(r => new LightRequestDTO
             {
                 Id = r.Id,
                 CreatedDate = r.CreatedDate,
                 DateFrom = r.DateFrom,
                 DateTo = r.DateTo,
+                UserName = r.User.Name,
                 Status = r.Status,
                 ConfirmationType = r.ConfirmationType,
-            }).ToList();
+            }).ToListAsync();
 
             var listLightRequestsDTO = new ListLightRequestsDTO
             {

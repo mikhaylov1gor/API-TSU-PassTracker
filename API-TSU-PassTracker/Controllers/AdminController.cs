@@ -54,7 +54,7 @@ namespace API_TSU_PassTracker.Controllers
         }
 
         [HttpGet("users")]
-        [Authorize(Roles = "Dean")]
+        [Authorize(Roles = "Teacher, Dean")]
         public async Task<ActionResult<List<UserModel>>> getAllUsers(
             [FromQuery] bool onlyConfirmed, 
             [FromQuery] List<Role> onlyTheseRoles,
@@ -68,9 +68,12 @@ namespace API_TSU_PassTracker.Controllers
 
         [HttpGet("download-requests")]
         [Authorize(Roles = "Teacher, Dean")]
-        public async Task<IActionResult> downloadRequests()
+        public async Task<IActionResult> downloadRequests(
+            [FromQuery] DateTime? dateFrom,
+            [FromQuery] DateTime? dateTo
+        )
         {
-            var response = await _adminService.downloadRequests();
+            var response = await _adminService.downloadRequests(dateFrom,dateTo);
             return File(response, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "requests.xlsx");
         }
     }

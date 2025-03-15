@@ -16,8 +16,8 @@ namespace API_TSU_PassTracker.Services
         Task<bool> ChangeUserRole(UserRoleUpdateModel model);
         Task<bool> confirmAccount(Guid userId, bool status);
         Task<bool> confirmRequest(Guid requestId, RequestStatus status);
-        Task<ActionResult<UserPagedListModel>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group, int page, int size);
-        Task<byte[]> downloadRequests();
+        Task<ActionResult<List<UserModel>>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group);
+        Task<byte[]> downloadRequests(DateTime? dateFrom, DateTime? dateTo);
     }
     public class AdminService : IAdminService
     {
@@ -96,7 +96,7 @@ namespace API_TSU_PassTracker.Services
 
             if (group != null) 
             {
-                query = query.Where(u => u.Group == group);
+                query = query.Where(u => u.Group.Contains(group));
             }
 
             var totalItems = await query.CountAsync();
@@ -131,12 +131,30 @@ namespace API_TSU_PassTracker.Services
             };
         }
 
-        public async Task<byte[]> downloadRequests()
+        public async Task<byte[]> downloadRequests(DateTime? dateFrom, DateTime? dateTo)
         {
-            var requests = await _context.Request
+            var requestsQuery =  _context.Request
                 .Where(r => r.Status == RequestStatus.Approved)
-                .Include(r => r.User)
-                .ToListAsync();
+                .AsQueryable();
+                
+            
+            if (dateFrom.HasValue)
+            {
+                requestsQuery = requestsQuery.Where(r => r.CreatedDate >= dateFrom.Value);
+            }
+
+            if (dateTo.HasValue)
+            {
+                requestsQuery = requestsQuery.Where(r => r.CreatedDate <= dateTo.Value);
+            }
+
+            if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
+            {
+                throw new ArgumentException("dateFrom не может быть позже чем dateTo.");
+            }
+
+
+            var requests = await requestsQuery.ToListAsync();
 
             if (!requests.Any())
             {
