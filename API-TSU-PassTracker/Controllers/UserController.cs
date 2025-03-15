@@ -60,11 +60,15 @@ namespace API_TSU_PassTracker.Controllers
         }
 
         [HttpGet("requests")]
-        [Authorize(Roles = "Student, Dean")]
-        public async Task<ActionResult<ListLightRequestsDTO>> GetAllMyRequests()
+        [Authorize(Roles = "Student")]
+        public async Task<ActionResult<ListLightRequestsDTO>> GetAllMyRequests(
+            [FromQuery] ConfirmationType confirmationType,
+            [FromQuery] RequestStatus status,
+            [FromQuery] SortEnum sort
+        )
         {
             var user = HttpContext.User;
-            var requests = await _userService.GetAllMyRequests(user);
+            var requests = await _userService.GetAllMyRequests(confirmationType, status, sort, user);
             return Ok(requests);
         }
     }

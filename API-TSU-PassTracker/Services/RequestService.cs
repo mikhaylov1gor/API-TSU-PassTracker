@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using API_TSU_PassTracker.Models.DB;
 using API_TSU_PassTracker.Models.DTO;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API_TSU_PassTracker.Services;
@@ -12,7 +13,7 @@ namespace API_TSU_PassTracker.Services;
 public interface IRequestService
 {
     Task<Guid> CreateRequest(RequestModel request, ClaimsPrincipal user);
-    Task<ListLightRequestsDTO> GetAllRequests(ClaimsPrincipal user);
+    Task<ActionResult<ListLightRequestsDTO>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String userName,  ClaimsPrincipal user, SortEnum sort);
     Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user);
     Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user);
 }
@@ -58,13 +59,40 @@ public class RequestService : IRequestService
         return dbRequest.Id;
     }
 
-    public async Task<ListLightRequestsDTO> GetAllRequests(ClaimsPrincipal user)
+    public async Task<ActionResult<ListLightRequestsDTO>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String? userName,  ClaimsPrincipal user, SortEnum sort)
     {
-        var requests = await _context.Request
-            .Include(r => r.User)
-            .ToListAsync();
+        var requests =  _context.Request.AsQueryable();
+            
 
-        var lightRequestsDtos = requests.Select(r => new LightRequestDTO
+        if(userName != null) {
+            requests = requests.Where(r => r.User.Name.Contains(userName));
+        }
+
+
+        requests = status switch
+        {
+            RequestStatus.Pending => requests.Where(r => r.Status == RequestStatus.Pending),
+            RequestStatus.Approved => requests.Where(r => r.Status == RequestStatus.Approved),
+            RequestStatus.Rejected => requests.Where(r => r.Status == RequestStatus.Rejected),
+            _ => throw new ArgumentException("Неизвестный статус запроса."),
+        };
+
+        requests = sort switch
+        {
+            SortEnum.CreatedAsc => requests.OrderBy(r => r.CreatedDate),
+            SortEnum.CreatedDesc => requests.OrderByDescending(r => r.CreatedDate),
+            _ => throw new ArgumentException("Неизвестный тип сортировки."),
+        };
+
+        requests = confirmationType switch
+            {
+                ConfirmationType.Educational => requests.Where(r => r.ConfirmationType == ConfirmationType.Educational),
+                ConfirmationType.Medical => requests.Where(r => r.ConfirmationType == ConfirmationType.Medical),
+                ConfirmationType.Family => requests.Where(r => r.ConfirmationType == ConfirmationType.Family),
+                _ => throw new ArgumentException("Неизвестный тип подтвреждающих документов."),
+            };
+
+        var lightRequestsDtos = await requests.Select(r => new LightRequestDTO
             {
                 Id = r.Id,
                 CreatedDate = r.CreatedDate,
@@ -73,7 +101,7 @@ public class RequestService : IRequestService
                 Status = r.Status,
                 UserName = r.User.Name,
                 ConfirmationType = r.ConfirmationType,
-            }).ToList();
+            }).ToListAsync();
 
         var listLightRequestsDTO = new ListLightRequestsDTO
         {
@@ -162,7 +190,6 @@ public class RequestService : IRequestService
             }
         }
 
-        // update request status
         existingRequest.Status = RequestStatus.Pending;
 
         ValidateDatesAndFiles(new RequestModel
