@@ -65,7 +65,7 @@ namespace API_TSU_PassTracker.Services
                 Login = newUser.Login,
                 PasswordHash = hashedPassword,
                 Salt = salt,
-                Roles = new List<Role> { Role.Student },
+                Roles = newUser.Roles,
                 Requests = new List<Request>(),
                 Group = newUser.Group
             };
