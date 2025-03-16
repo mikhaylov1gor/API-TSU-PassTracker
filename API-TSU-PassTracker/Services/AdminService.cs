@@ -16,6 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<bool> ChangeUserRole(UserRoleUpdateModel model);
         Task<bool> confirmAccount(Guid userId, bool status);
         Task<bool> confirmRequest(Guid requestId, RequestStatus status);
+        Task<bool> changeGroup(Guid userId, string newGroup);
         Task<ActionResult<UserPagedListModel>> getUsers(bool onlyConfirmed, List<Role> onlyTheseRoles, string group, int page, int size);
         Task<byte[]> downloadRequests(DateTime? dateFrom, DateTime? dateTo);
     }
@@ -71,6 +72,21 @@ namespace API_TSU_PassTracker.Services
             }
 
             request.Status = status;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> changeGroup(Guid userId, string newGroup)
+        {
+            var user = await _context.User
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.Group = newGroup;
             await _context.SaveChangesAsync();
             return true;
         }

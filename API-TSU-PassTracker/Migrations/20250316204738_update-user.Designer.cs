@@ -3,6 +3,7 @@ using System;
 using API_TSU_PassTracker.Models.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API_TSU_PassTracker.Migrations
 {
     [DbContext(typeof(TsuPassTrackerDBContext))]
-    partial class TsuPassTrackerDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250316204738_update-user")]
+    partial class updateuser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,6 +84,7 @@ namespace API_TSU_PassTracker.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Group")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsConfirmed")

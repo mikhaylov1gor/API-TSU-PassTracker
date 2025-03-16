@@ -53,6 +53,15 @@ namespace API_TSU_PassTracker.Controllers
             return response ? Ok("Статус заявки изменен") : NotFound("Заявка не найдена.");
         }
 
+        [HttpPut("changeGroup")]
+        [Authorize(Roles = "Dean")]
+        public async Task<IActionResult> ChangeGroup(Guid userId, string newGroup)
+        {
+            var response = await _adminService.changeGroup(userId,newGroup);
+            return response ? Ok("Номер группы изменен") : NotFound("Пользователь не найден.");
+
+        }
+
         [HttpGet("users")]
         [Authorize(Roles = "Teacher, Dean")]
         public async Task<ActionResult<List<UserModel>>> getAllUsers(
@@ -76,5 +85,6 @@ namespace API_TSU_PassTracker.Controllers
             var response = await _adminService.downloadRequests(dateFrom,dateTo);
             return File(response, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "requests.xlsx");
         }
+        
     }
 }

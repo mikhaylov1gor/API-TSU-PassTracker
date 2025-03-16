@@ -15,7 +15,7 @@ namespace API_TSU_PassTracker.Models.DB
         [MinLength(1, ErrorMessage = "Имя должно содержать хотя бы один символ.")]
         [MaxLength(100, ErrorMessage = "Имя не должно превышать 100 символов.")]
         public string Name { get; set; }
-        public string Group { get; set; }
+        public string? Group { get; set; }
 
         [Required(ErrorMessage = "Роль обязательна для заполнения.")]
         public List<Role>? Roles { get; set; }

@@ -52,6 +52,11 @@ namespace API_TSU_PassTracker.Services
                 throw new ArgumentException("Пользователь уже существует.");
             }
 
+            if (newUser.Roles.Contains(Role.Student) && newUser.Group == null)
+            {
+                throw new ArgumentException("Для пользователя с ролью студент группа обязательна");
+            }
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
