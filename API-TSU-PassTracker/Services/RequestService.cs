@@ -13,7 +13,7 @@ namespace API_TSU_PassTracker.Services;
 public interface IRequestService
 {
     Task<Guid> CreateRequest(RequestModel request, ClaimsPrincipal user);
-    Task<ActionResult<LightRequestsPagedListModel>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String? userName, ClaimsPrincipal user, SortEnum sort, int page, int size);
+    Task<ActionResult<LightRequestsPagedListModel>> GetAllRequests(ConfirmationType? confirmationType, RequestStatus? status, String? userName, ClaimsPrincipal user, SortEnum? sort, int page, int size);
     Task<RequestDTO> GetRequestById(Guid id, ClaimsPrincipal user);
     Task UpdateRequest(Guid id, RequestUpdateModel request, ClaimsPrincipal user);
 }
@@ -59,7 +59,7 @@ public class RequestService : IRequestService
         return dbRequest.Id;
     }
 
-    public async Task<ActionResult<LightRequestsPagedListModel>> GetAllRequests(ConfirmationType confirmationType, RequestStatus status, String? userName,  ClaimsPrincipal user, SortEnum sort, int page, int size)
+    public async Task<ActionResult<LightRequestsPagedListModel>> GetAllRequests(ConfirmationType? confirmationType, RequestStatus? status, String? userName,  ClaimsPrincipal user, SortEnum? sort, int page, int size)
     {
         var requests =  _context.Request.AsQueryable();
             
@@ -72,28 +72,34 @@ public class RequestService : IRequestService
             requests = requests.Where(r => r.User.Name.Contains(userName));
         }
 
-        requests = status switch
-        {
-            RequestStatus.Pending => requests.Where(r => r.Status == RequestStatus.Pending),
-            RequestStatus.Approved => requests.Where(r => r.Status == RequestStatus.Approved),
-            RequestStatus.Rejected => requests.Where(r => r.Status == RequestStatus.Rejected),
-            _ => throw new ArgumentException("Неизвестный статус запроса."),
-        };
+        if(status.HasValue) {
+            requests = status switch
+            {
+                RequestStatus.Pending => requests.Where(r => r.Status == RequestStatus.Pending),
+                RequestStatus.Approved => requests.Where(r => r.Status == RequestStatus.Approved),
+                RequestStatus.Rejected => requests.Where(r => r.Status == RequestStatus.Rejected),
+                _ => throw new ArgumentException("Неизвестный статус запроса."),
+            };
+        }
 
-        requests = sort switch
-        {
-            SortEnum.CreatedAsc => requests.OrderBy(r => r.CreatedDate),
-            SortEnum.CreatedDesc => requests.OrderByDescending(r => r.CreatedDate),
-            _ => throw new ArgumentException("Неизвестный тип сортировки."),
-        };
+        if(sort.HasValue) {
+            requests = sort switch
+            {
+                SortEnum.CreatedAsc => requests.OrderBy(r => r.CreatedDate),
+                SortEnum.CreatedDesc => requests.OrderByDescending(r => r.CreatedDate),
+                _ => throw new ArgumentException("Неизвестный тип сортировки."),
+            };
+        }
 
-        requests = confirmationType switch
+        if(confirmationType.HasValue) {
+            requests = confirmationType switch
             {
                 ConfirmationType.Educational => requests.Where(r => r.ConfirmationType == ConfirmationType.Educational),
                 ConfirmationType.Medical => requests.Where(r => r.ConfirmationType == ConfirmationType.Medical),
                 ConfirmationType.Family => requests.Where(r => r.ConfirmationType == ConfirmationType.Family),
                 _ => throw new ArgumentException("Неизвестный тип подтвреждающих документов."),
             };
+        }
 
         var totalItems = await requests.CountAsync();
 

@@ -31,10 +31,10 @@ public class RequestController : ControllerBase
     [HttpGet("all")]
     [Authorize(Roles = "Dean, Teacher")]
     public async Task<ActionResult<ListLightRequestsDTO>> GetAllRequests(
-        [FromQuery] ConfirmationType confirmationType,
-        [FromQuery] RequestStatus status,
+        [FromQuery] ConfirmationType? confirmationType,
+        [FromQuery] RequestStatus? status,
         [FromQuery] String? userName,
-        [FromQuery] SortEnum sort,
+        [FromQuery] SortEnum? sort,
         [FromQuery] int page,
         [FromQuery] int size)
     {

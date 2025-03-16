@@ -130,11 +130,16 @@ namespace API_TSU_PassTracker.Services
 
         public async Task<byte[]> downloadRequests(DateTime? dateFrom, DateTime? dateTo)
         {
-            var requestsQuery =  _context.Request
-                .Where(r => r.Status == RequestStatus.Approved)
-                .AsQueryable();
-                
-            
+            var requestsQuery = _context.Request
+            .Include(r => r.User)
+            .Where(r => r.Status == RequestStatus.Approved)
+            .AsQueryable();
+
+            if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
+            {
+                throw new ArgumentException("dateFrom не может быть позже чем dateTo.");
+            }
+
             if (dateFrom.HasValue)
             {
                 requestsQuery = requestsQuery.Where(r => r.CreatedDate >= dateFrom.Value);
@@ -142,16 +147,13 @@ namespace API_TSU_PassTracker.Services
 
             if (dateTo.HasValue)
             {
-                requestsQuery = requestsQuery.Where(r => r.CreatedDate <= dateTo.Value);
+                var dateToEndOfDay = dateTo.Value.Date.AddHours(23).AddMinutes(59).AddSeconds(59).AddMilliseconds(999);
+                requestsQuery = requestsQuery.Where(r => r.CreatedDate <= dateToEndOfDay);
             }
-
-            if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
-            {
-                throw new ArgumentException("dateFrom не может быть позже чем dateTo.");
-            }
-
 
             var requests = await requestsQuery.ToListAsync();
+
+
 
             if (!requests.Any())
             {
