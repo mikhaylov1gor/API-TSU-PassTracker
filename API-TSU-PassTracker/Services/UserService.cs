@@ -16,7 +16,7 @@ namespace API_TSU_PassTracker.Services
         Task<TokenResponseModel> login(LoginCredentialsModel loginCredentials);
         Task logout(string token, ClaimsPrincipal user);
         Task<UserModel> getProfile(ClaimsPrincipal userClaims);
-        Task<LightRequestsPagedListModel> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user, int page, int size);
+        Task<LightRequestsPagedListModel> GetAllMyRequests(ConfirmationType? confirmationType, RequestStatus? status, SortEnum? sort, ClaimsPrincipal user, int page, int size);
     }
     public class UserService : IUserService
     {
@@ -139,7 +139,7 @@ namespace API_TSU_PassTracker.Services
             return user;
         }
 
-        public async Task<LightRequestsPagedListModel> GetAllMyRequests(ConfirmationType confirmationType, RequestStatus status, SortEnum sort, ClaimsPrincipal user, int page, int size)
+        public async Task<LightRequestsPagedListModel> GetAllMyRequests(ConfirmationType? confirmationType, RequestStatus? status, SortEnum? sort, ClaimsPrincipal user, int page, int size)
         {
             var requests =  _context.Request.AsQueryable();
 
@@ -160,28 +160,34 @@ namespace API_TSU_PassTracker.Services
             }
            
 
-           requests = status switch
+           if(status.HasValue) {
+            requests = status switch
             {
                 RequestStatus.Pending => requests.Where(r => r.Status == RequestStatus.Pending),
                 RequestStatus.Approved => requests.Where(r => r.Status == RequestStatus.Approved),
                 RequestStatus.Rejected => requests.Where(r => r.Status == RequestStatus.Rejected),
                 _ => throw new ArgumentException("Неизвестный статус запроса."),
             };
+           }
 
-            requests = sort switch
+            if(sort.HasValue) {
+                requests = sort switch
             {
                 SortEnum.CreatedAsc => requests.OrderBy(r => r.CreatedDate),
                 SortEnum.CreatedDesc => requests.OrderByDescending(r => r.CreatedDate),
                 _ => throw new ArgumentException("Неизвестный тип сортировки."),
             };
+            }
 
-            requests = confirmationType switch
+            if(confirmationType.HasValue) {
+                requests = confirmationType switch
             {
                 ConfirmationType.Educational => requests.Where(r => r.ConfirmationType == ConfirmationType.Educational),
                 ConfirmationType.Medical => requests.Where(r => r.ConfirmationType == ConfirmationType.Medical),
                 ConfirmationType.Family => requests.Where(r => r.ConfirmationType == ConfirmationType.Family),
                 _ => throw new ArgumentException("Неизвестный тип подтвреждающих документов."),
             };
+            }
 
             var totalItems = await requests.CountAsync();
 

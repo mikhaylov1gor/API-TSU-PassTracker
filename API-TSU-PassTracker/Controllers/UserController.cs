@@ -62,9 +62,9 @@ namespace API_TSU_PassTracker.Controllers
         [HttpGet("requests")]
         [Authorize(Roles = "Student")]
         public async Task<ActionResult<ListLightRequestsDTO>> GetAllMyRequests(
-            [FromQuery] ConfirmationType confirmationType,
-            [FromQuery] RequestStatus status,
-            [FromQuery] SortEnum sort,
+            [FromQuery] ConfirmationType? confirmationType,
+            [FromQuery] RequestStatus? status,
+            [FromQuery] SortEnum? sort,
             [FromQuery] int page,
             [FromQuery] int size
         )
