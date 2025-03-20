@@ -32,6 +32,13 @@ public class RequestService : IRequestService
         var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
         ValidateDatesAndFiles(request);
 
+        var userDB = await _context.User.FindAsync(userId);
+
+        if (!userDB.IsConfirmed)
+        {
+            throw new InvalidOperationException("Аккаунт не подтвержен");
+        }
+
         var dbRequest = new Request
         {
             Id = Guid.NewGuid(),
