@@ -36,7 +36,7 @@ public class RequestService : IRequestService
 
         if (!userDB.IsConfirmed)
         {
-            throw new InvalidOperationException("Аккаунт не подтвержен");
+            throw new InvalidOperationException("Аккаунт не подтвержден");
         }
 
         var dbRequest = new Request
@@ -176,6 +176,13 @@ public class RequestService : IRequestService
     {
         var userId = Guid.Parse(user.FindFirst(ClaimTypes.NameIdentifier).Value);
         var isDean = user.IsInRole("Dean");
+
+        var userDB = await _context.User.FindAsync(userId);
+
+        if (!userDB.IsConfirmed)
+        {
+            throw new InvalidOperationException("Аккаунт не подтвержден");
+        }
 
         var existingRequest = await _context.Request
             .FirstOrDefaultAsync(r => r.Id == id);
